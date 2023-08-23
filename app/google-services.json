@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "987273901849",
+    "project_id": "echo-reading-35dcc",
+    "storage_bucket": "echo-reading-35dcc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:987273901849:android:c28dc639da27b1478a7788",
+        "android_client_info": {
+          "package_name": "com.echoreading"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "987273901849-o4fqjcs1iakeko4cfn6fvtikd17ekq36.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCCKXwIm3ERnaZ4sh6DSaG3nTpe89s57aQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "987273901849-o4fqjcs1iakeko4cfn6fvtikd17ekq36.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
