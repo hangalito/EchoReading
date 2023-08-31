@@ -15,7 +15,8 @@
         android:title="@string/settings"
         android:icon="@drawable/ic_setting_white"
         android:orderInCategory="2"
-        app:showAsAction="ifRoom"
-        android:onClick="goToSettingsActivity"/>
+        android:onClick="goToSettingsActivity"
+        android:visible="false"
+        app:showAsAction="ifRoom"/>
 
 </menu>
