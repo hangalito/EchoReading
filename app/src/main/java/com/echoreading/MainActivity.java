@@ -2,7 +2,6 @@ package com.echoreading;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -23,15 +22,13 @@ public class MainActivity extends AppCompatActivity {
 
         // There is an account logged in
         if (user != null) {
-            new Handler().postDelayed(() -> {
-                String username = user.getDisplayName();
-                String welcomeMessage = getString(R.string.welcome_user) + username;
-                Toast.makeText(MainActivity.this, welcomeMessage, Toast.LENGTH_SHORT).show();
+            String username = user.getDisplayName();
+            String welcomeMessage = getString(R.string.welcome_user) + username;
+            Toast.makeText(MainActivity.this, welcomeMessage, Toast.LENGTH_SHORT).show();
 
-                Intent intent = new Intent(MainActivity.this, HomeActivity.class);
-                startActivity(intent);
-                finish();
-            }, 3000);
+            Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+            startActivity(intent);
+            finish();
         } else {
             // There is no user logged in
             Intent intent = new Intent(MainActivity.this, LoginActivity.class);
