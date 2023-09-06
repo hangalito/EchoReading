@@ -1,17 +1,18 @@
 package com.echoreading;
 
 
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.textfield.TextInputLayout;
@@ -26,14 +27,17 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.util.Objects;
 
 public class UserProfileActivity extends AppCompatActivity {
-    MaterialCardView progress_circular;
-    TextInputLayout edit_username;
-    TextInputLayout edit_name;
-    TextInputLayout edit_email;
-    TextView full_name_view;
-    TextView username_view;
-    FirebaseAuth firebaseAuth;
-    FirebaseUser user;
+
+    private Button buttonUpdateData, buttonDeleteAccount;
+    private MaterialCardView progress_circular;
+    private MaterialCardView profilePicture;
+    private TextInputLayout edit_username;
+    private TextInputLayout edit_name;
+    private TextInputLayout edit_email;
+    private TextView full_name_view;
+    private TextView username_view;
+    private FirebaseAuth firebaseAuth;
+    private FirebaseUser user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +61,9 @@ public class UserProfileActivity extends AppCompatActivity {
             username_view = findViewById(R.id.username_view);
             progress_circular = findViewById(R.id.progress_circular);
             progress_circular.setVisibility(View.VISIBLE);
+            profilePicture = findViewById(R.id.pp_card_view);
+            buttonUpdateData = findViewById(R.id.updateData);
+            buttonDeleteAccount = findViewById(R.id.delete_account);
             getUserData();
         } else {
             setContentView(R.layout.activity_user_profile_null);
@@ -69,9 +76,7 @@ public class UserProfileActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
-
     public void logOut(MenuItem view) {
-
         firebaseAuth.signOut();
         Intent intent = new Intent(UserProfileActivity.this, LoginActivity.class);
         startActivity(intent);
@@ -120,7 +125,7 @@ public class UserProfileActivity extends AppCompatActivity {
         String white_space_error = getString(R.string.no_white_space);
         String no_white_space = "\\A_\\w{6,20}\\z";
 
-        if (username_value.isEmpty()){
+        if (username_value.isEmpty()) {
             edit_username.setError(value_error);
             return false;
         } else if (username_value.length() >= 15) {
@@ -143,7 +148,7 @@ public class UserProfileActivity extends AppCompatActivity {
         String email_error = getString(R.string.invalid_email);
         String email_pattern = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+";
 
-        if (email_value.isEmpty()){
+        if (email_value.isEmpty()) {
             edit_email.setError(value_error);
             return false;
         } else if (!email_value.matches(email_pattern)) {
@@ -176,6 +181,13 @@ public class UserProfileActivity extends AppCompatActivity {
                 .getReference("Registered users");
         reference.child(user.getUid()).get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
+                profilePicture.setVisibility(View.VISIBLE);
+                edit_name.setVisibility(View.VISIBLE);
+                edit_email.setVisibility(View.VISIBLE);
+                edit_username.setVisibility(View.VISIBLE);
+                buttonUpdateData.setVisibility(View.VISIBLE);
+                buttonDeleteAccount.setVisibility(View.VISIBLE);
+
                 if (task.getResult().exists()) {
                     DataSnapshot snapshot = task.getResult();
                     String db_full_name = String.valueOf(snapshot.child("full_name").getValue());
