@@ -10,7 +10,7 @@
 
     <TextView
         android:id="@+id/welcome_text"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
         android:padding="8dp"
@@ -18,17 +18,19 @@
         android:textColor="@color/text_color"
         android:fontFamily="@font/ubuntu_medium"
         android:textSize="36sp"
-        android:layout_marginBottom="16dp"/>
+        android:layout_marginBottom="16dp"
+        android:layout_alignStart="@+id/register_form"/>
 
     <TextView
         android:id="@+id/create_profile_message"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/create_profile"
         android:textSize="16sp"
         android:layout_marginStart="8dp"
         android:padding="8dp"
-        android:layout_below="@+id/welcome_text"/>
+        android:layout_below="@+id/welcome_text"
+        android:layout_alignStart="@+id/register_form"/>
 
     <ScrollView
         android:id="@+id/register_form"
@@ -135,11 +137,12 @@
                 android:padding="8dp"
                 android:layout_margin="8dp"
                 android:textColorHint="@color/text_color"
-                android:onClick="registerUser"/>
+                android:onClick="registerUser"
+                android:layout_gravity="center_horizontal"/>
 
             <!-- Login button -->
             <Button
-                android:id="@+id/login__reg__button"
+                android:id="@+id/login_reg_button"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:hint="@string/login__reg__button"
@@ -147,7 +150,8 @@
                 android:background="#00000000"
                 android:padding="8dp"
                 android:layout_margin="8dp"
-                android:onClick="goToLoginActivity"/>
+                android:onClick="goToLoginActivity"
+                android:layout_gravity="center_horizontal"/>
 
         </LinearLayout>
 

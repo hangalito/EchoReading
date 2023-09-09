@@ -22,7 +22,7 @@
 
     <ScrollView
         android:id="@+id/login_frame"
-        android:layout_width="match_parent"
+        android:layout_width="600dp"
         android:layout_height="wrap_content"
         android:layout_below="@id/welcome_text"
         android:layout_centerHorizontal="true">
