@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "987273901849",
+    "firebase_url": "https://echo-reading-35dcc-default-rtdb.firebaseio.com",
     "project_id": "echo-reading-35dcc",
     "storage_bucket": "echo-reading-35dcc.appspot.com"
   },
@@ -14,7 +15,7 @@
       },
       "oauth_client": [
         {
-          "client_id": "987273901849-o4fqjcs1iakeko4cfn6fvtikd17ekq36.apps.googleusercontent.com",
+          "client_id": "987273901849-t7njveg59o127q9ebt1am7h87g7h4k9m.apps.googleusercontent.com",
           "client_type": 3
         }
       ],

@@ -7,6 +7,7 @@
     <string name="email_field_hint">Email</string>
     <string name="password_field_hint">Password</string>
     <string name="login_button">Login</string>
+    <string name="login_with_google">Login with Google</string>
     <string name="register_new_user">Register</string>
     <string name="guest_login">Guest</string>
 

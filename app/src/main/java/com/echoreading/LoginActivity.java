@@ -1,13 +1,14 @@
 package com.echoreading;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.textfield.TextInputLayout;
@@ -32,6 +33,12 @@ public class LoginActivity extends AppCompatActivity {
         auth = FirebaseAuth.getInstance();
         email_field = findViewById(R.id.email_field_login);
         password_field = findViewById(R.id.password_field_login);
+        LinearLayout loginWithGoogle = findViewById(R.id.loginWithGoogle);
+        loginWithGoogle.setOnClickListener(i ->
+                Toast.makeText(LoginActivity.this,
+                        "Loading...", Toast.LENGTH_LONG
+                ).show()
+        );
 
         if (savedInstanceState != null) {
             emailInsert = savedInstanceState.getString("emailInsert");
@@ -66,7 +73,7 @@ public class LoginActivity extends AppCompatActivity {
 
             auth.signInWithEmailAndPassword(email, password).addOnCompleteListener(this,
                     task -> {
-                        if (task.isSuccessful()){
+                        if (task.isSuccessful()) {
                             progress_circular.setVisibility(View.GONE);
                             // Toast a welcome message for the user
                             String user_name = Objects.requireNonNull(auth.getCurrentUser()).getDisplayName();
@@ -108,7 +115,7 @@ public class LoginActivity extends AppCompatActivity {
         String email_error = getString(R.string.invalid_email);
         String email_pattern = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+";
 
-        if (email.isEmpty()){
+        if (email.isEmpty()) {
             email_field.setError(value_error);
             return false;
         } else if (!email.matches(email_pattern)) {
@@ -125,9 +132,9 @@ public class LoginActivity extends AppCompatActivity {
         String password = Objects.requireNonNull(password_field.getEditText()).getText().toString();
         String value_error = getString(R.string.empty_field);
 
-        if (password.isEmpty()){
+        if (password.isEmpty()) {
             password_field.setError(value_error);
-            return  false;
+            return false;
         } else {
             password_field.setError(null);
             password_field.setErrorEnabled(false);
@@ -146,7 +153,7 @@ public class LoginActivity extends AppCompatActivity {
         auth.signInAnonymously();
         Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP |
-                    Intent.FLAG_ACTIVITY_CLEAR_TASK |
+                Intent.FLAG_ACTIVITY_CLEAR_TASK |
                 Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
         finish();
