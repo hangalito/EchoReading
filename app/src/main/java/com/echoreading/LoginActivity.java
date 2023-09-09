@@ -143,6 +143,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void loginAsGuest(View view) {
+        auth.signInAnonymously();
         Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP |
                     Intent.FLAG_ACTIVITY_CLEAR_TASK |

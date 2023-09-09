@@ -1,14 +1,14 @@
 package com.echoreading;
 
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.textfield.TextInputLayout;
@@ -115,7 +115,7 @@ public class RegisterActivity extends AppCompatActivity {
                         ReadWriteUserDetails writeUserDetails = new ReadWriteUserDetails(name_commit,
                                 username_commit);
                         DatabaseReference reference = FirebaseDatabase.getInstance().
-                                getReference("Registered users");
+                                getReference("users");
                         reference.child(user.getUid()).setValue(writeUserDetails).
                                 addOnCompleteListener(task1 -> {
                                     if (task1.isSuccessful()) {
@@ -146,7 +146,7 @@ public class RegisterActivity extends AppCompatActivity {
                                     getString(R.string.email_already_in_use),
                                     Toast.LENGTH_SHORT).show();
                         } catch (Exception e) {
-                            Log.e(TAG, e.getMessage());
+                            Log.e(TAG, Objects.requireNonNull(e.getMessage()));
                             Toast.makeText(RegisterActivity.this,
                                     e.getMessage(), Toast.LENGTH_SHORT).show();
                             progress_circular.setVisibility(View.GONE);

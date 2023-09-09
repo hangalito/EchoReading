@@ -20,6 +20,7 @@ public class MainActivity extends AppCompatActivity {
         FirebaseAuth auth = FirebaseAuth.getInstance();
         FirebaseUser user = auth.getCurrentUser();
 
+
         // There is an account logged in
         if (user != null) {
             String username = user.getDisplayName();

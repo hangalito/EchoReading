@@ -44,7 +44,7 @@ public class UserProfileActivity extends AppCompatActivity {
         firebaseAuth = FirebaseAuth.getInstance();
         user = firebaseAuth.getCurrentUser();
 
-        if (user != null) {
+        if (user != null && !user.isAnonymous()) {
             setContentView(R.layout.activity_user_profile);
             Toolbar toolbar = findViewById(R.id.user_toolbar);
             toolbar.setTitle(getString(R.string.profile));
@@ -84,16 +84,36 @@ public class UserProfileActivity extends AppCompatActivity {
     public void deleteAccount(View view) {
         // Deletes the current account
         user.delete();
+        DatabaseReference reference = FirebaseDatabase.getInstance().getReference("users");
+        reference.child(user.getUid()).removeValue()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        String msg = "Account deleted successfully";
+                        Toast.makeText(UserProfileActivity.this, msg, Toast.LENGTH_SHORT).show();
+                    }
+                });
+        firebaseAuth.signOut();
+        Intent intent = new Intent(UserProfileActivity.this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK
+                | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        finish();
     }
 
     public void updateUserData(View view) {
         progress_circular.setVisibility(View.VISIBLE);
         if (validateUsername() | validateEmail() | validateName()) {
-            String edit_username_text = Objects.requireNonNull(edit_username.getEditText())
+            String new_name = Objects.requireNonNull(edit_name.getEditText())
+                    .getText().toString();
+            String new_username = Objects.requireNonNull(edit_username.getEditText())
                     .getText().toString();
 
+            DatabaseReference databaseReference = FirebaseDatabase.getInstance()
+                    .getReference("users");
+            ReadWriteUserDetails writeUserDetails = new ReadWriteUserDetails(new_name, new_username);
+
             UserProfileChangeRequest userProfileChangeRequest = new UserProfileChangeRequest
-                    .Builder().setDisplayName(edit_username_text).build();
+                    .Builder().setDisplayName(new_username).build();
             user.updateProfile(userProfileChangeRequest).addOnCompleteListener(
                     task -> {
                         if (task.isSuccessful()) {
@@ -113,6 +133,26 @@ public class UserProfileActivity extends AppCompatActivity {
                         }
                     }
             );
+
+            databaseReference.child(user.getUid()).setValue(writeUserDetails)
+                    .addOnCompleteListener(task -> {
+                        String msg;
+                        if (task.isSuccessful()) {
+                            msg = "You data was updated successfully!";
+                        } else {
+                            try {
+                                throw Objects.requireNonNull(task.getException());
+                            } catch (Exception e) {
+                                msg = e.getMessage();
+                                Toast.makeText(UserProfileActivity.this, msg,
+                                        Toast.LENGTH_SHORT).show();
+                                throw new RuntimeException(e);
+                            }
+                        }
+                        Toast.makeText(UserProfileActivity.this, msg,
+                                Toast.LENGTH_SHORT).show();
+                        getUserData();
+                    });
         }
     }
 
@@ -177,7 +217,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
     private void getUserData() {
         DatabaseReference reference = FirebaseDatabase.getInstance()
-                .getReference("Registered users");
+                .getReference("users");
         reference.child(user.getUid()).get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 profilePicture.setVisibility(View.VISIBLE);
@@ -196,11 +236,22 @@ public class UserProfileActivity extends AppCompatActivity {
                     Objects.requireNonNull(edit_username.getEditText()).setText(user.getDisplayName());
                     Objects.requireNonNull(edit_email.getEditText()).setText(user.getEmail());
                     progress_circular.setVisibility(View.GONE);
+                } else {
+                    progress_circular.setVisibility(View.GONE);
+                    try {
+                        throw Objects.requireNonNull(task.getException());
+                    } catch (Exception e) {
+                        String msg = e.getMessage();
+                        Toast.makeText(this, msg, Toast.LENGTH_SHORT
+                        ).show();
+                        throw new RuntimeException(e);
+                    }
                 }
             } else {
                 progress_circular.setVisibility(View.GONE);
                 String msg = getString(R.string.get_data_error);
                 Toast.makeText(UserProfileActivity.this, msg, Toast.LENGTH_SHORT).show();
+
                 finish();
             }
         });
