@@ -6,7 +6,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,8 +27,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.util.Objects;
 
 public class UserProfileActivity extends AppCompatActivity {
-
-    private Button buttonUpdateData, buttonDeleteAccount;
     private MaterialCardView progress_circular;
     private MaterialCardView profilePicture;
     private TextInputLayout edit_username;
@@ -38,6 +36,7 @@ public class UserProfileActivity extends AppCompatActivity {
     private TextView username_view;
     private FirebaseAuth firebaseAuth;
     private FirebaseUser user;
+    private ScrollView editViewLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,8 +61,7 @@ public class UserProfileActivity extends AppCompatActivity {
             progress_circular = findViewById(R.id.progress_circular);
             progress_circular.setVisibility(View.VISIBLE);
             profilePicture = findViewById(R.id.pp_card_view);
-            buttonUpdateData = findViewById(R.id.updateData);
-            buttonDeleteAccount = findViewById(R.id.delete_account);
+            editViewLayout = findViewById(R.id.edit_info_form);
             getUserData();
         } else {
             setContentView(R.layout.activity_user_profile_null);
@@ -89,6 +87,7 @@ public class UserProfileActivity extends AppCompatActivity {
     }
 
     public void updateUserData(View view) {
+        progress_circular.setVisibility(View.VISIBLE);
         if (validateUsername() | validateEmail() | validateName()) {
             String edit_username_text = Objects.requireNonNull(edit_username.getEditText())
                     .getText().toString();
@@ -182,11 +181,7 @@ public class UserProfileActivity extends AppCompatActivity {
         reference.child(user.getUid()).get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 profilePicture.setVisibility(View.VISIBLE);
-                edit_name.setVisibility(View.VISIBLE);
-                edit_email.setVisibility(View.VISIBLE);
-                edit_username.setVisibility(View.VISIBLE);
-                buttonUpdateData.setVisibility(View.VISIBLE);
-                buttonDeleteAccount.setVisibility(View.VISIBLE);
+                editViewLayout.setVisibility(View.VISIBLE);
 
                 if (task.getResult().exists()) {
                     DataSnapshot snapshot = task.getResult();

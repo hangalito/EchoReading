@@ -25,7 +25,8 @@
             android:layout_width="match_parent"
             android:layout_height="200dp"
             android:background="@color/colorPrimaryDark"
-            android:padding="16dp">
+            android:padding="16dp"
+            android:gravity="center_vertical">
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/pp_card_view"
@@ -49,8 +50,8 @@
                 android:textColor="@color/text_color"
                 android:includeFontPadding="false"
                 android:layout_toEndOf="@+id/pp_card_view"
-                android:layout_centerVertical="true"
-                android:layout_marginStart="8dp"/>
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="42dp"/>
 
             <TextView
                 android:id="@+id/username_view"
@@ -61,7 +62,6 @@
                 android:includeFontPadding="false"
                 android:layout_toEndOf="@+id/pp_card_view"
                 android:layout_below="@+id/full_name_view"
-                android:layout_centerVertical="true"
                 android:layout_marginStart="8dp"/>
 
         </RelativeLayout>
