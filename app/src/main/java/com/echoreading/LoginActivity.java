@@ -98,14 +98,12 @@ public class LoginActivity extends AppCompatActivity {
                                 msg = getString(R.string.no_user_found);
                             } catch (Exception e) {
                                 msg = e.getMessage();
-                                throw new RuntimeException(e);
                             } finally {
                                 Toast.makeText(LoginActivity.this, msg, Toast.LENGTH_LONG).show();
                             }
                         }
                     });
         }, 1500);
-
     }
 
     // Methods to validate the email and password

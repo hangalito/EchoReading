@@ -123,6 +123,9 @@ public class RegisterActivity extends AppCompatActivity {
                                         user.sendEmailVerification();
 
                                         // Go to home screen
+                                        String msg = getString(R.string.register_welcome);
+                                        Toast.makeText(RegisterActivity.this,
+                                                msg + username_commit, Toast.LENGTH_LONG).show();
                                         Intent intent = new Intent(RegisterActivity.this, HomeActivity.class);
                                         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP |
                                                 Intent.FLAG_ACTIVITY_CLEAR_TASK |
@@ -131,12 +134,15 @@ public class RegisterActivity extends AppCompatActivity {
                                         finish();
                                     } else {
                                         progress_circular.setVisibility(View.GONE);
-                                        String database_error = getString(R.string.database_error);
+                                        // String database_error = getString(R.string.database_error);
+                                        String database_error = Objects.requireNonNull(task1.getException()).getMessage();
                                         Toast.makeText(RegisterActivity.this,
-                                                database_error, Toast.LENGTH_SHORT).show();
+                                                database_error, Toast.LENGTH_LONG).show();
+                                        user.delete();
                                     }
                                 });
                     } else {
+                        progress_circular.setVisibility(View.GONE);
                         try {
                             throw Objects.requireNonNull(task.getException());
                         } catch (FirebaseAuthUserCollisionException e) {
