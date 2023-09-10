@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="colorAccent">#326AA9</color>
+    <color name="colorPrimary">#1E90D0</color>
+    <color name="colorPrimaryDark">#1E90CF</color>
+    <color name="text_color">@color/white</color>
+    <color name="white">#FFFFFFFF</color>
+    <style name="AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
+        
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorBackgroundFloating">@color/colorAccent</item>
+    </style>
+</resources>

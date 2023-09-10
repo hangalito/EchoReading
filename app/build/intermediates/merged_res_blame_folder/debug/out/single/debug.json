@@ -1,0 +1,162 @@
+[
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/mipmap-hdpi_ic_launcher_round.png.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/mipmap-hdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/drawable_ic_logout.xml.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/drawable/ic_logout.xml"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/layout_activity_user_profile_null.xml.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/layout/activity_user_profile_null.xml"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/layout_activity_main.xml.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/layout/activity_main.xml"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/layout_activity_settings.xml.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/layout/activity_settings.xml"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/drawable_ic_launcher_background.xml.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/drawable/ic_launcher_background.xml"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/layout_main_toolbar.xml.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/layout/main_toolbar.xml"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/mipmap-xhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/drawable_circle_white.xml.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/drawable/circle_white.xml"
+    },
+    {
+        "merged": "com.echoreading.app-merged_res-33:/layout_activity_login.xml.flat",
+        "source": "com.echoreading.app-main-35:/layout/activity_login.xml"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/font_ubuntu_mono.xml.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/font/ubuntu_mono.xml"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/mipmap-xxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/drawable_ic_username.xml.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/drawable/ic_username.xml"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/mipmap-xxhdpi_ic_launcher_round.png.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/mipmap-xxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/layout_activity_register.xml.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/layout/activity_register.xml"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/layout_activity_user_profile.xml.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/layout/activity_user_profile.xml"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/drawable-nodpi_google_icon.png.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/drawable-nodpi/google_icon.png"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/layout_progress_circular.xml.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/layout/progress_circular.xml"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/drawable_ic_setting_white.xml.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/drawable/ic_setting_white.xml"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/menu_profile_menu.xml.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/menu/profile_menu.xml"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/menu_main_menu.xml.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/menu/main_menu.xml"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/mipmap-xhdpi_ic_launcher_round.png.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/mipmap-xhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/mipmap-hdpi/ic_launcher.png"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/font_ubuntu_medium.xml.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/font/ubuntu_medium.xml"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/xml_backup_rules.xml.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/xml/backup_rules.xml"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/drawable_ic_email.xml.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/drawable/ic_email.xml"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/mipmap-xxxhdpi_ic_launcher_round.png.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/mipmap-xxxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/drawable_ic_person.xml.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/drawable/ic_person.xml"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/drawable_ic_profile_white.xml.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/drawable/ic_profile_white.xml"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/layout_activity_login.xml.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/layout/activity_login.xml"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/drawable-nodpi_profile_picture.png.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/drawable-nodpi/profile_picture.png"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/drawable_ic_speak.xml.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/drawable/ic_speak.xml"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/mipmap-xxxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/xml_data_extraction_rules.xml.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/xml/data_extraction_rules.xml"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/mipmap-mdpi/ic_launcher.png"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/layout_activity_home.xml.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/layout/activity_home.xml"
+    },
+    {
+        "merged": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-merged_res-33:/mipmap-mdpi_ic_launcher_round.png.flat",
+        "source": "/home/bartolomeu-hangalo/.gradle/daemon/8.0/com.echoreading.app-main-35:/mipmap-mdpi/ic_launcher_round.png"
+    }
+]
