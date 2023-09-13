@@ -38,7 +38,7 @@
 23-->[androidx.core:core:1.9.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/82cd7126862418a311b7542b8601085e/transformed/core-1.9.0/AndroidManifest.xml:26:22-94
 24
 25    <application
-25-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:5:5-47:19
+25-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:5:5-48:19
 26        android:allowBackup="true"
 26-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:6:9-35
 27        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
@@ -51,262 +51,264 @@
 31-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:8:9-54
 32        android:icon="@mipmap/ic_launcher"
 32-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:9:9-43
-33        android:roundIcon="@mipmap/ic_launcher_round"
-33-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:10:9-54
-34        android:supportsRtl="true"
-34-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:11:9-35
-35        android:testOnly="true"
-36        android:theme="@style/AppTheme" >
-36-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:12:9-40
-37        <activity
-37-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:14:9-18:40
-38            android:name="com.echoreading.UserProfileActivity"
-38-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:15:13-48
-39            android:exported="false"
-39-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:18:13-37
-40            android:label="@string/profile_label"
-40-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:17:13-50
-41            android:parentActivityName="com.echoreading.HomeActivity" />
-41-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:16:13-55
-42        <activity
-42-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:19:9-23:58
-43            android:name="com.echoreading.SettingsActivity"
-43-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:20:13-45
-44            android:exported="false"
-44-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:21:13-37
-45            android:label="@string/settings_label"
-45-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:22:13-51
-46            android:parentActivityName="com.echoreading.HomeActivity" />
-46-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:23:13-55
-47        <activity
-47-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:24:9-26:40
-48            android:name="com.echoreading.RegisterActivity"
-48-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:25:13-45
-49            android:exported="false" />
-49-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:26:13-37
-50        <activity
-50-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:27:9-30:48
-51            android:name="com.echoreading.HomeActivity"
-51-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:28:13-41
-52            android:exported="false"
-52-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:29:13-37
-53            android:label="@string/app_name" />
-53-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:30:13-45
-54        <activity
-54-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:31:9-33:40
-55            android:name="com.echoreading.LoginActivity"
-55-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:32:13-42
-56            android:exported="false" />
-56-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:33:13-37
-57        <activity
-57-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:34:9-42:20
-58            android:name="com.echoreading.MainActivity"
-58-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:35:13-41
-59            android:exported="true" >
-59-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:36:13-36
-60            <intent-filter>
-60-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:37:13-41:29
-61                <action android:name="android.intent.action.MAIN" />
-61-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:38:17-69
-61-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:38:25-66
-62
-63                <category android:name="android.intent.category.LAUNCHER" />
-63-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:40:17-77
-63-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:40:27-74
-64            </intent-filter>
-65        </activity>
-66
-67        <meta-data
-67-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:44:9-46:57
-68            android:name="preloaded_fonts"
-68-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:45:13-43
-69            android:resource="@array/preloaded_fonts" />
-69-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:46:13-54
-70
-71        <service
-71-->[com.google.firebase:firebase-database:20.2.2] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/761318f9e07b63dde9233d017abe06ca/transformed/firebase-database-20.2.2/AndroidManifest.xml:28:9-34:19
-72            android:name="com.google.firebase.components.ComponentDiscoveryService"
-72-->[com.google.firebase:firebase-database:20.2.2] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/761318f9e07b63dde9233d017abe06ca/transformed/firebase-database-20.2.2/AndroidManifest.xml:29:13-84
-73            android:directBootAware="true"
-73-->[com.google.firebase:firebase-common:20.3.3] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/da1f94e3d0a780b3654bd51b1f5f6ba4/transformed/firebase-common-20.3.3/AndroidManifest.xml:34:13-43
-74            android:exported="false" >
-74-->[com.google.firebase:firebase-database:20.2.2] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/761318f9e07b63dde9233d017abe06ca/transformed/firebase-database-20.2.2/AndroidManifest.xml:30:13-37
-75            <meta-data
-75-->[com.google.firebase:firebase-database:20.2.2] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/761318f9e07b63dde9233d017abe06ca/transformed/firebase-database-20.2.2/AndroidManifest.xml:31:13-33:85
-76                android:name="com.google.firebase.components:com.google.firebase.database.DatabaseRegistrar"
-76-->[com.google.firebase:firebase-database:20.2.2] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/761318f9e07b63dde9233d017abe06ca/transformed/firebase-database-20.2.2/AndroidManifest.xml:32:17-109
-77                android:value="com.google.firebase.components.ComponentRegistrar" />
-77-->[com.google.firebase:firebase-database:20.2.2] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/761318f9e07b63dde9233d017abe06ca/transformed/firebase-database-20.2.2/AndroidManifest.xml:33:17-82
-78            <meta-data
-78-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:69:13-71:85
-79                android:name="com.google.firebase.components:com.google.firebase.auth.FirebaseAuthRegistrar"
-79-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:70:17-109
-80                android:value="com.google.firebase.components.ComponentRegistrar" />
-80-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:71:17-82
-81            <meta-data
-81-->[com.google.android.gms:play-services-measurement-api:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/bea68437a20af7c4c11bbbdff18390e1/transformed/play-services-measurement-api-21.3.0/AndroidManifest.xml:31:13-33:85
-82                android:name="com.google.firebase.components:com.google.firebase.analytics.connector.internal.AnalyticsConnectorRegistrar"
-82-->[com.google.android.gms:play-services-measurement-api:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/bea68437a20af7c4c11bbbdff18390e1/transformed/play-services-measurement-api-21.3.0/AndroidManifest.xml:32:17-139
-83                android:value="com.google.firebase.components.ComponentRegistrar" />
-83-->[com.google.android.gms:play-services-measurement-api:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/bea68437a20af7c4c11bbbdff18390e1/transformed/play-services-measurement-api-21.3.0/AndroidManifest.xml:33:17-82
-84            <meta-data
-84-->[com.google.firebase:firebase-installations:17.1.4] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/3c4731e98fc71e8bd58b1a39543f3234/transformed/firebase-installations-17.1.4/AndroidManifest.xml:15:13-17:85
-85                android:name="com.google.firebase.components:com.google.firebase.installations.FirebaseInstallationsRegistrar"
-85-->[com.google.firebase:firebase-installations:17.1.4] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/3c4731e98fc71e8bd58b1a39543f3234/transformed/firebase-installations-17.1.4/AndroidManifest.xml:16:17-127
-86                android:value="com.google.firebase.components.ComponentRegistrar" />
-86-->[com.google.firebase:firebase-installations:17.1.4] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/3c4731e98fc71e8bd58b1a39543f3234/transformed/firebase-installations-17.1.4/AndroidManifest.xml:17:17-82
-87        </service>
-88
-89        <activity
-89-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:29:9-46:20
-90            android:name="com.google.firebase.auth.internal.GenericIdpActivity"
-90-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:30:13-80
-91            android:excludeFromRecents="true"
-91-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:31:13-46
-92            android:exported="true"
-92-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:32:13-36
-93            android:launchMode="singleTask"
-93-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:33:13-44
-94            android:theme="@android:style/Theme.Translucent.NoTitleBar" >
-94-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:34:13-72
-95            <intent-filter>
-95-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:35:13-45:29
-96                <action android:name="android.intent.action.VIEW" />
-96-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:36:17-69
-96-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:36:25-66
-97
-98                <category android:name="android.intent.category.DEFAULT" />
-98-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:38:17-76
-98-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:38:27-73
-99                <category android:name="android.intent.category.BROWSABLE" />
-99-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:39:17-78
-99-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:39:27-75
-100
-101                <data
-101-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:41:17-44:51
-102                    android:host="firebase.auth"
-102-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:42:21-49
-103                    android:path="/"
-103-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:43:21-37
-104                    android:scheme="genericidp" />
-104-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:44:21-48
-105            </intent-filter>
-106        </activity>
-107        <activity
-107-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:47:9-64:20
-108            android:name="com.google.firebase.auth.internal.RecaptchaActivity"
-108-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:48:13-79
-109            android:excludeFromRecents="true"
-109-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:49:13-46
-110            android:exported="true"
-110-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:50:13-36
-111            android:launchMode="singleTask"
-111-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:51:13-44
-112            android:theme="@android:style/Theme.Translucent.NoTitleBar" >
-112-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:52:13-72
-113            <intent-filter>
-113-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:53:13-63:29
-114                <action android:name="android.intent.action.VIEW" />
-114-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:36:17-69
-114-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:36:25-66
-115
-116                <category android:name="android.intent.category.DEFAULT" />
-116-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:38:17-76
-116-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:38:27-73
-117                <category android:name="android.intent.category.BROWSABLE" />
-117-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:39:17-78
-117-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:39:27-75
-118
-119                <data
-119-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:41:17-44:51
-120                    android:host="firebase.auth"
-120-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:42:21-49
-121                    android:path="/"
-121-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:43:21-37
-122                    android:scheme="recaptcha" />
-122-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:44:21-48
-123            </intent-filter>
-124        </activity>
-125
-126        <provider
-126-->[com.google.firebase:firebase-common:20.3.3] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/da1f94e3d0a780b3654bd51b1f5f6ba4/transformed/firebase-common-20.3.3/AndroidManifest.xml:25:9-30:39
-127            android:name="com.google.firebase.provider.FirebaseInitProvider"
-127-->[com.google.firebase:firebase-common:20.3.3] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/da1f94e3d0a780b3654bd51b1f5f6ba4/transformed/firebase-common-20.3.3/AndroidManifest.xml:26:13-77
-128            android:authorities="com.echoreading.firebaseinitprovider"
-128-->[com.google.firebase:firebase-common:20.3.3] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/da1f94e3d0a780b3654bd51b1f5f6ba4/transformed/firebase-common-20.3.3/AndroidManifest.xml:27:13-72
-129            android:directBootAware="true"
-129-->[com.google.firebase:firebase-common:20.3.3] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/da1f94e3d0a780b3654bd51b1f5f6ba4/transformed/firebase-common-20.3.3/AndroidManifest.xml:28:13-43
-130            android:exported="false"
-130-->[com.google.firebase:firebase-common:20.3.3] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/da1f94e3d0a780b3654bd51b1f5f6ba4/transformed/firebase-common-20.3.3/AndroidManifest.xml:29:13-37
-131            android:initOrder="100" />
-131-->[com.google.firebase:firebase-common:20.3.3] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/da1f94e3d0a780b3654bd51b1f5f6ba4/transformed/firebase-common-20.3.3/AndroidManifest.xml:30:13-36
-132
-133        <activity
-133-->[com.google.android.gms:play-services-base:18.1.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/fa0a51b58d4df959ba09c009098e1515/transformed/play-services-base-18.1.0/AndroidManifest.xml:20:9-22:45
-134            android:name="com.google.android.gms.common.api.GoogleApiActivity"
-134-->[com.google.android.gms:play-services-base:18.1.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/fa0a51b58d4df959ba09c009098e1515/transformed/play-services-base-18.1.0/AndroidManifest.xml:20:19-85
-135            android:exported="false"
-135-->[com.google.android.gms:play-services-base:18.1.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/fa0a51b58d4df959ba09c009098e1515/transformed/play-services-base-18.1.0/AndroidManifest.xml:22:19-43
-136            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-136-->[com.google.android.gms:play-services-base:18.1.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/fa0a51b58d4df959ba09c009098e1515/transformed/play-services-base-18.1.0/AndroidManifest.xml:21:19-78
-137
-138        <receiver
-138-->[com.google.android.gms:play-services-measurement:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/5f5a03d9db55926728e0637f7ca29fee/transformed/play-services-measurement-21.3.0/AndroidManifest.xml:29:9-33:20
-139            android:name="com.google.android.gms.measurement.AppMeasurementReceiver"
-139-->[com.google.android.gms:play-services-measurement:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/5f5a03d9db55926728e0637f7ca29fee/transformed/play-services-measurement-21.3.0/AndroidManifest.xml:30:13-85
-140            android:enabled="true"
-140-->[com.google.android.gms:play-services-measurement:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/5f5a03d9db55926728e0637f7ca29fee/transformed/play-services-measurement-21.3.0/AndroidManifest.xml:31:13-35
-141            android:exported="false" >
-141-->[com.google.android.gms:play-services-measurement:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/5f5a03d9db55926728e0637f7ca29fee/transformed/play-services-measurement-21.3.0/AndroidManifest.xml:32:13-37
-142        </receiver>
-143
-144        <service
-144-->[com.google.android.gms:play-services-measurement:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/5f5a03d9db55926728e0637f7ca29fee/transformed/play-services-measurement-21.3.0/AndroidManifest.xml:35:9-38:40
-145            android:name="com.google.android.gms.measurement.AppMeasurementService"
-145-->[com.google.android.gms:play-services-measurement:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/5f5a03d9db55926728e0637f7ca29fee/transformed/play-services-measurement-21.3.0/AndroidManifest.xml:36:13-84
-146            android:enabled="true"
-146-->[com.google.android.gms:play-services-measurement:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/5f5a03d9db55926728e0637f7ca29fee/transformed/play-services-measurement-21.3.0/AndroidManifest.xml:37:13-35
-147            android:exported="false" />
-147-->[com.google.android.gms:play-services-measurement:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/5f5a03d9db55926728e0637f7ca29fee/transformed/play-services-measurement-21.3.0/AndroidManifest.xml:38:13-37
-148        <service
-148-->[com.google.android.gms:play-services-measurement:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/5f5a03d9db55926728e0637f7ca29fee/transformed/play-services-measurement-21.3.0/AndroidManifest.xml:39:9-43:72
-149            android:name="com.google.android.gms.measurement.AppMeasurementJobService"
-149-->[com.google.android.gms:play-services-measurement:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/5f5a03d9db55926728e0637f7ca29fee/transformed/play-services-measurement-21.3.0/AndroidManifest.xml:40:13-87
-150            android:enabled="true"
-150-->[com.google.android.gms:play-services-measurement:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/5f5a03d9db55926728e0637f7ca29fee/transformed/play-services-measurement-21.3.0/AndroidManifest.xml:41:13-35
-151            android:exported="false"
-151-->[com.google.android.gms:play-services-measurement:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/5f5a03d9db55926728e0637f7ca29fee/transformed/play-services-measurement-21.3.0/AndroidManifest.xml:42:13-37
-152            android:permission="android.permission.BIND_JOB_SERVICE" />
-152-->[com.google.android.gms:play-services-measurement:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/5f5a03d9db55926728e0637f7ca29fee/transformed/play-services-measurement-21.3.0/AndroidManifest.xml:43:13-69
-153
-154        <meta-data
-154-->[com.google.android.gms:play-services-basement:18.1.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/07a32a91abaee7d5b806ff8dde8ca95d/transformed/play-services-basement-18.1.0/AndroidManifest.xml:21:9-23:69
-155            android:name="com.google.android.gms.version"
-155-->[com.google.android.gms:play-services-basement:18.1.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/07a32a91abaee7d5b806ff8dde8ca95d/transformed/play-services-basement-18.1.0/AndroidManifest.xml:22:13-58
-156            android:value="@integer/google_play_services_version" />
-156-->[com.google.android.gms:play-services-basement:18.1.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/07a32a91abaee7d5b806ff8dde8ca95d/transformed/play-services-basement-18.1.0/AndroidManifest.xml:23:13-66
-157
-158        <provider
-158-->[androidx.emoji2:emoji2:1.2.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/b18cbc4802ed8cea7fc6e406bcd77f71/transformed/emoji2-1.2.0/AndroidManifest.xml:24:9-32:20
-159            android:name="androidx.startup.InitializationProvider"
-159-->[androidx.emoji2:emoji2:1.2.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/b18cbc4802ed8cea7fc6e406bcd77f71/transformed/emoji2-1.2.0/AndroidManifest.xml:25:13-67
-160            android:authorities="com.echoreading.androidx-startup"
-160-->[androidx.emoji2:emoji2:1.2.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/b18cbc4802ed8cea7fc6e406bcd77f71/transformed/emoji2-1.2.0/AndroidManifest.xml:26:13-68
-161            android:exported="false" >
-161-->[androidx.emoji2:emoji2:1.2.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/b18cbc4802ed8cea7fc6e406bcd77f71/transformed/emoji2-1.2.0/AndroidManifest.xml:27:13-37
-162            <meta-data
-162-->[androidx.emoji2:emoji2:1.2.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/b18cbc4802ed8cea7fc6e406bcd77f71/transformed/emoji2-1.2.0/AndroidManifest.xml:29:13-31:52
-163                android:name="androidx.emoji2.text.EmojiCompatInitializer"
-163-->[androidx.emoji2:emoji2:1.2.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/b18cbc4802ed8cea7fc6e406bcd77f71/transformed/emoji2-1.2.0/AndroidManifest.xml:30:17-75
-164                android:value="androidx.startup" />
-164-->[androidx.emoji2:emoji2:1.2.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/b18cbc4802ed8cea7fc6e406bcd77f71/transformed/emoji2-1.2.0/AndroidManifest.xml:31:17-49
-165            <meta-data
-165-->[androidx.lifecycle:lifecycle-process:2.4.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/98884969ef4f64542870f11e39e760fb/transformed/lifecycle-process-2.4.1/AndroidManifest.xml:31:13-33:52
-166                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
-166-->[androidx.lifecycle:lifecycle-process:2.4.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/98884969ef4f64542870f11e39e760fb/transformed/lifecycle-process-2.4.1/AndroidManifest.xml:32:17-78
-167                android:value="androidx.startup" />
-167-->[androidx.lifecycle:lifecycle-process:2.4.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/98884969ef4f64542870f11e39e760fb/transformed/lifecycle-process-2.4.1/AndroidManifest.xml:33:17-49
-168        </provider>
-169    </application>
-170
-171</manifest>
+33        android:label="@string/app_name"
+33-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:10:9-41
+34        android:roundIcon="@mipmap/ic_launcher_round"
+34-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:11:9-54
+35        android:supportsRtl="true"
+35-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:12:9-35
+36        android:testOnly="true"
+37        android:theme="@style/AppTheme" >
+37-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:13:9-40
+38        <activity
+38-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:15:9-19:40
+39            android:name="com.echoreading.UserProfileActivity"
+39-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:16:13-48
+40            android:exported="false"
+40-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:19:13-37
+41            android:label="@string/profile_label"
+41-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:18:13-50
+42            android:parentActivityName="com.echoreading.HomeActivity" />
+42-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:17:13-55
+43        <activity
+43-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:20:9-24:58
+44            android:name="com.echoreading.SettingsActivity"
+44-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:21:13-45
+45            android:exported="false"
+45-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:22:13-37
+46            android:label="@string/settings_label"
+46-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:23:13-51
+47            android:parentActivityName="com.echoreading.HomeActivity" />
+47-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:24:13-55
+48        <activity
+48-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:25:9-27:40
+49            android:name="com.echoreading.RegisterActivity"
+49-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:26:13-45
+50            android:exported="false" />
+50-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:27:13-37
+51        <activity
+51-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:28:9-31:48
+52            android:name="com.echoreading.HomeActivity"
+52-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:29:13-41
+53            android:exported="false"
+53-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:30:13-37
+54            android:label="@string/app_name" />
+54-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:31:13-45
+55        <activity
+55-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:32:9-34:40
+56            android:name="com.echoreading.LoginActivity"
+56-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:33:13-42
+57            android:exported="false" />
+57-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:34:13-37
+58        <activity
+58-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:35:9-43:20
+59            android:name="com.echoreading.MainActivity"
+59-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:36:13-41
+60            android:exported="true" >
+60-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:37:13-36
+61            <intent-filter>
+61-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:38:13-42:29
+62                <action android:name="android.intent.action.MAIN" />
+62-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:39:17-69
+62-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:39:25-66
+63
+64                <category android:name="android.intent.category.LAUNCHER" />
+64-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:41:17-77
+64-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:41:27-74
+65            </intent-filter>
+66        </activity>
+67
+68        <meta-data
+68-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:45:9-47:57
+69            android:name="preloaded_fonts"
+69-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:46:13-43
+70            android:resource="@array/preloaded_fonts" />
+70-->/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:47:13-54
+71
+72        <service
+72-->[com.google.firebase:firebase-database:20.2.2] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/761318f9e07b63dde9233d017abe06ca/transformed/firebase-database-20.2.2/AndroidManifest.xml:28:9-34:19
+73            android:name="com.google.firebase.components.ComponentDiscoveryService"
+73-->[com.google.firebase:firebase-database:20.2.2] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/761318f9e07b63dde9233d017abe06ca/transformed/firebase-database-20.2.2/AndroidManifest.xml:29:13-84
+74            android:directBootAware="true"
+74-->[com.google.firebase:firebase-common:20.3.3] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/da1f94e3d0a780b3654bd51b1f5f6ba4/transformed/firebase-common-20.3.3/AndroidManifest.xml:34:13-43
+75            android:exported="false" >
+75-->[com.google.firebase:firebase-database:20.2.2] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/761318f9e07b63dde9233d017abe06ca/transformed/firebase-database-20.2.2/AndroidManifest.xml:30:13-37
+76            <meta-data
+76-->[com.google.firebase:firebase-database:20.2.2] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/761318f9e07b63dde9233d017abe06ca/transformed/firebase-database-20.2.2/AndroidManifest.xml:31:13-33:85
+77                android:name="com.google.firebase.components:com.google.firebase.database.DatabaseRegistrar"
+77-->[com.google.firebase:firebase-database:20.2.2] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/761318f9e07b63dde9233d017abe06ca/transformed/firebase-database-20.2.2/AndroidManifest.xml:32:17-109
+78                android:value="com.google.firebase.components.ComponentRegistrar" />
+78-->[com.google.firebase:firebase-database:20.2.2] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/761318f9e07b63dde9233d017abe06ca/transformed/firebase-database-20.2.2/AndroidManifest.xml:33:17-82
+79            <meta-data
+79-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:69:13-71:85
+80                android:name="com.google.firebase.components:com.google.firebase.auth.FirebaseAuthRegistrar"
+80-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:70:17-109
+81                android:value="com.google.firebase.components.ComponentRegistrar" />
+81-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:71:17-82
+82            <meta-data
+82-->[com.google.android.gms:play-services-measurement-api:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/bea68437a20af7c4c11bbbdff18390e1/transformed/play-services-measurement-api-21.3.0/AndroidManifest.xml:31:13-33:85
+83                android:name="com.google.firebase.components:com.google.firebase.analytics.connector.internal.AnalyticsConnectorRegistrar"
+83-->[com.google.android.gms:play-services-measurement-api:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/bea68437a20af7c4c11bbbdff18390e1/transformed/play-services-measurement-api-21.3.0/AndroidManifest.xml:32:17-139
+84                android:value="com.google.firebase.components.ComponentRegistrar" />
+84-->[com.google.android.gms:play-services-measurement-api:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/bea68437a20af7c4c11bbbdff18390e1/transformed/play-services-measurement-api-21.3.0/AndroidManifest.xml:33:17-82
+85            <meta-data
+85-->[com.google.firebase:firebase-installations:17.1.4] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/3c4731e98fc71e8bd58b1a39543f3234/transformed/firebase-installations-17.1.4/AndroidManifest.xml:15:13-17:85
+86                android:name="com.google.firebase.components:com.google.firebase.installations.FirebaseInstallationsRegistrar"
+86-->[com.google.firebase:firebase-installations:17.1.4] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/3c4731e98fc71e8bd58b1a39543f3234/transformed/firebase-installations-17.1.4/AndroidManifest.xml:16:17-127
+87                android:value="com.google.firebase.components.ComponentRegistrar" />
+87-->[com.google.firebase:firebase-installations:17.1.4] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/3c4731e98fc71e8bd58b1a39543f3234/transformed/firebase-installations-17.1.4/AndroidManifest.xml:17:17-82
+88        </service>
+89
+90        <activity
+90-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:29:9-46:20
+91            android:name="com.google.firebase.auth.internal.GenericIdpActivity"
+91-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:30:13-80
+92            android:excludeFromRecents="true"
+92-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:31:13-46
+93            android:exported="true"
+93-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:32:13-36
+94            android:launchMode="singleTask"
+94-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:33:13-44
+95            android:theme="@android:style/Theme.Translucent.NoTitleBar" >
+95-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:34:13-72
+96            <intent-filter>
+96-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:35:13-45:29
+97                <action android:name="android.intent.action.VIEW" />
+97-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:36:17-69
+97-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:36:25-66
+98
+99                <category android:name="android.intent.category.DEFAULT" />
+99-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:38:17-76
+99-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:38:27-73
+100                <category android:name="android.intent.category.BROWSABLE" />
+100-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:39:17-78
+100-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:39:27-75
+101
+102                <data
+102-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:41:17-44:51
+103                    android:host="firebase.auth"
+103-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:42:21-49
+104                    android:path="/"
+104-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:43:21-37
+105                    android:scheme="genericidp" />
+105-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:44:21-48
+106            </intent-filter>
+107        </activity>
+108        <activity
+108-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:47:9-64:20
+109            android:name="com.google.firebase.auth.internal.RecaptchaActivity"
+109-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:48:13-79
+110            android:excludeFromRecents="true"
+110-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:49:13-46
+111            android:exported="true"
+111-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:50:13-36
+112            android:launchMode="singleTask"
+112-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:51:13-44
+113            android:theme="@android:style/Theme.Translucent.NoTitleBar" >
+113-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:52:13-72
+114            <intent-filter>
+114-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:53:13-63:29
+115                <action android:name="android.intent.action.VIEW" />
+115-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:36:17-69
+115-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:36:25-66
+116
+117                <category android:name="android.intent.category.DEFAULT" />
+117-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:38:17-76
+117-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:38:27-73
+118                <category android:name="android.intent.category.BROWSABLE" />
+118-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:39:17-78
+118-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:39:27-75
+119
+120                <data
+120-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:41:17-44:51
+121                    android:host="firebase.auth"
+121-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:42:21-49
+122                    android:path="/"
+122-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:43:21-37
+123                    android:scheme="recaptcha" />
+123-->[com.google.firebase:firebase-auth:22.1.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/eedd2f7f4b273b7aad50ef6011bf4f4f/transformed/firebase-auth-22.1.1/AndroidManifest.xml:44:21-48
+124            </intent-filter>
+125        </activity>
+126
+127        <provider
+127-->[com.google.firebase:firebase-common:20.3.3] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/da1f94e3d0a780b3654bd51b1f5f6ba4/transformed/firebase-common-20.3.3/AndroidManifest.xml:25:9-30:39
+128            android:name="com.google.firebase.provider.FirebaseInitProvider"
+128-->[com.google.firebase:firebase-common:20.3.3] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/da1f94e3d0a780b3654bd51b1f5f6ba4/transformed/firebase-common-20.3.3/AndroidManifest.xml:26:13-77
+129            android:authorities="com.echoreading.firebaseinitprovider"
+129-->[com.google.firebase:firebase-common:20.3.3] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/da1f94e3d0a780b3654bd51b1f5f6ba4/transformed/firebase-common-20.3.3/AndroidManifest.xml:27:13-72
+130            android:directBootAware="true"
+130-->[com.google.firebase:firebase-common:20.3.3] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/da1f94e3d0a780b3654bd51b1f5f6ba4/transformed/firebase-common-20.3.3/AndroidManifest.xml:28:13-43
+131            android:exported="false"
+131-->[com.google.firebase:firebase-common:20.3.3] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/da1f94e3d0a780b3654bd51b1f5f6ba4/transformed/firebase-common-20.3.3/AndroidManifest.xml:29:13-37
+132            android:initOrder="100" />
+132-->[com.google.firebase:firebase-common:20.3.3] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/da1f94e3d0a780b3654bd51b1f5f6ba4/transformed/firebase-common-20.3.3/AndroidManifest.xml:30:13-36
+133
+134        <activity
+134-->[com.google.android.gms:play-services-base:18.1.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/fa0a51b58d4df959ba09c009098e1515/transformed/play-services-base-18.1.0/AndroidManifest.xml:20:9-22:45
+135            android:name="com.google.android.gms.common.api.GoogleApiActivity"
+135-->[com.google.android.gms:play-services-base:18.1.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/fa0a51b58d4df959ba09c009098e1515/transformed/play-services-base-18.1.0/AndroidManifest.xml:20:19-85
+136            android:exported="false"
+136-->[com.google.android.gms:play-services-base:18.1.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/fa0a51b58d4df959ba09c009098e1515/transformed/play-services-base-18.1.0/AndroidManifest.xml:22:19-43
+137            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+137-->[com.google.android.gms:play-services-base:18.1.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/fa0a51b58d4df959ba09c009098e1515/transformed/play-services-base-18.1.0/AndroidManifest.xml:21:19-78
+138
+139        <receiver
+139-->[com.google.android.gms:play-services-measurement:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/5f5a03d9db55926728e0637f7ca29fee/transformed/play-services-measurement-21.3.0/AndroidManifest.xml:29:9-33:20
+140            android:name="com.google.android.gms.measurement.AppMeasurementReceiver"
+140-->[com.google.android.gms:play-services-measurement:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/5f5a03d9db55926728e0637f7ca29fee/transformed/play-services-measurement-21.3.0/AndroidManifest.xml:30:13-85
+141            android:enabled="true"
+141-->[com.google.android.gms:play-services-measurement:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/5f5a03d9db55926728e0637f7ca29fee/transformed/play-services-measurement-21.3.0/AndroidManifest.xml:31:13-35
+142            android:exported="false" >
+142-->[com.google.android.gms:play-services-measurement:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/5f5a03d9db55926728e0637f7ca29fee/transformed/play-services-measurement-21.3.0/AndroidManifest.xml:32:13-37
+143        </receiver>
+144
+145        <service
+145-->[com.google.android.gms:play-services-measurement:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/5f5a03d9db55926728e0637f7ca29fee/transformed/play-services-measurement-21.3.0/AndroidManifest.xml:35:9-38:40
+146            android:name="com.google.android.gms.measurement.AppMeasurementService"
+146-->[com.google.android.gms:play-services-measurement:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/5f5a03d9db55926728e0637f7ca29fee/transformed/play-services-measurement-21.3.0/AndroidManifest.xml:36:13-84
+147            android:enabled="true"
+147-->[com.google.android.gms:play-services-measurement:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/5f5a03d9db55926728e0637f7ca29fee/transformed/play-services-measurement-21.3.0/AndroidManifest.xml:37:13-35
+148            android:exported="false" />
+148-->[com.google.android.gms:play-services-measurement:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/5f5a03d9db55926728e0637f7ca29fee/transformed/play-services-measurement-21.3.0/AndroidManifest.xml:38:13-37
+149        <service
+149-->[com.google.android.gms:play-services-measurement:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/5f5a03d9db55926728e0637f7ca29fee/transformed/play-services-measurement-21.3.0/AndroidManifest.xml:39:9-43:72
+150            android:name="com.google.android.gms.measurement.AppMeasurementJobService"
+150-->[com.google.android.gms:play-services-measurement:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/5f5a03d9db55926728e0637f7ca29fee/transformed/play-services-measurement-21.3.0/AndroidManifest.xml:40:13-87
+151            android:enabled="true"
+151-->[com.google.android.gms:play-services-measurement:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/5f5a03d9db55926728e0637f7ca29fee/transformed/play-services-measurement-21.3.0/AndroidManifest.xml:41:13-35
+152            android:exported="false"
+152-->[com.google.android.gms:play-services-measurement:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/5f5a03d9db55926728e0637f7ca29fee/transformed/play-services-measurement-21.3.0/AndroidManifest.xml:42:13-37
+153            android:permission="android.permission.BIND_JOB_SERVICE" />
+153-->[com.google.android.gms:play-services-measurement:21.3.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/5f5a03d9db55926728e0637f7ca29fee/transformed/play-services-measurement-21.3.0/AndroidManifest.xml:43:13-69
+154
+155        <meta-data
+155-->[com.google.android.gms:play-services-basement:18.1.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/07a32a91abaee7d5b806ff8dde8ca95d/transformed/play-services-basement-18.1.0/AndroidManifest.xml:21:9-23:69
+156            android:name="com.google.android.gms.version"
+156-->[com.google.android.gms:play-services-basement:18.1.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/07a32a91abaee7d5b806ff8dde8ca95d/transformed/play-services-basement-18.1.0/AndroidManifest.xml:22:13-58
+157            android:value="@integer/google_play_services_version" />
+157-->[com.google.android.gms:play-services-basement:18.1.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/07a32a91abaee7d5b806ff8dde8ca95d/transformed/play-services-basement-18.1.0/AndroidManifest.xml:23:13-66
+158
+159        <provider
+159-->[androidx.emoji2:emoji2:1.2.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/b18cbc4802ed8cea7fc6e406bcd77f71/transformed/emoji2-1.2.0/AndroidManifest.xml:24:9-32:20
+160            android:name="androidx.startup.InitializationProvider"
+160-->[androidx.emoji2:emoji2:1.2.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/b18cbc4802ed8cea7fc6e406bcd77f71/transformed/emoji2-1.2.0/AndroidManifest.xml:25:13-67
+161            android:authorities="com.echoreading.androidx-startup"
+161-->[androidx.emoji2:emoji2:1.2.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/b18cbc4802ed8cea7fc6e406bcd77f71/transformed/emoji2-1.2.0/AndroidManifest.xml:26:13-68
+162            android:exported="false" >
+162-->[androidx.emoji2:emoji2:1.2.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/b18cbc4802ed8cea7fc6e406bcd77f71/transformed/emoji2-1.2.0/AndroidManifest.xml:27:13-37
+163            <meta-data
+163-->[androidx.emoji2:emoji2:1.2.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/b18cbc4802ed8cea7fc6e406bcd77f71/transformed/emoji2-1.2.0/AndroidManifest.xml:29:13-31:52
+164                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+164-->[androidx.emoji2:emoji2:1.2.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/b18cbc4802ed8cea7fc6e406bcd77f71/transformed/emoji2-1.2.0/AndroidManifest.xml:30:17-75
+165                android:value="androidx.startup" />
+165-->[androidx.emoji2:emoji2:1.2.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/b18cbc4802ed8cea7fc6e406bcd77f71/transformed/emoji2-1.2.0/AndroidManifest.xml:31:17-49
+166            <meta-data
+166-->[androidx.lifecycle:lifecycle-process:2.4.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/98884969ef4f64542870f11e39e760fb/transformed/lifecycle-process-2.4.1/AndroidManifest.xml:31:13-33:52
+167                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+167-->[androidx.lifecycle:lifecycle-process:2.4.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/98884969ef4f64542870f11e39e760fb/transformed/lifecycle-process-2.4.1/AndroidManifest.xml:32:17-78
+168                android:value="androidx.startup" />
+168-->[androidx.lifecycle:lifecycle-process:2.4.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/98884969ef4f64542870f11e39e760fb/transformed/lifecycle-process-2.4.1/AndroidManifest.xml:33:17-49
+169        </provider>
+170    </application>
+171
+172</manifest>

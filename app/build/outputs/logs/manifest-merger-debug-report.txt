@@ -1,9 +1,9 @@
 -- Merging decision tree log ---
 manifest
-ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:2:1-49:12
-INJECTED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:2:1-49:12
-INJECTED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:2:1-49:12
-INJECTED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:2:1-49:12
+ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:2:1-50:12
+INJECTED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:2:1-50:12
+INJECTED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:2:1-50:12
+INJECTED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:2:1-50:12
 MERGED from [com.google.android.material:material:1.9.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/4623ee08b168b4a89d6416ef8c45f9cd/transformed/material-1.9.0/AndroidManifest.xml:17:1-26:12
 MERGED from [androidx.constraintlayout:constraintlayout:2.1.4] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/40a2dce1349ed2ece82447dd2fff971d/transformed/constraintlayout-2.1.4/AndroidManifest.xml:2:1-11:12
 MERGED from [androidx.appcompat:appcompat-resources:1.6.1] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/ed7b27610ff6e36eb4fd827795631efb/transformed/appcompat-resources-1.6.1/AndroidManifest.xml:17:1-22:12
@@ -81,8 +81,8 @@ MERGED from [androidx.annotation:annotation-experimental:1.3.0] /home/bartolomeu
 	xmlns:android
 		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:2:11-69
 application
-ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:5:5-47:19
-INJECTED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:5:5-47:19
+ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:5:5-48:19
+INJECTED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:5:5-48:19
 MERGED from [com.google.android.material:material:1.9.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/4623ee08b168b4a89d6416ef8c45f9cd/transformed/material-1.9.0/AndroidManifest.xml:24:5-20
 MERGED from [com.google.android.material:material:1.9.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/4623ee08b168b4a89d6416ef8c45f9cd/transformed/material-1.9.0/AndroidManifest.xml:24:5-20
 MERGED from [androidx.constraintlayout:constraintlayout:2.1.4] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/40a2dce1349ed2ece82447dd2fff971d/transformed/constraintlayout-2.1.4/AndroidManifest.xml:9:5-20
@@ -140,83 +140,85 @@ MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/barto
 	android:appComponentFactory
 		ADDED from [androidx.core:core:1.9.0] /home/bartolomeu-hangalo/.gradle/caches/transforms-3/82cd7126862418a311b7542b8601085e/transformed/core-1.9.0/AndroidManifest.xml:28:18-86
 	android:supportsRtl
-		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:11:9-35
+		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:12:9-35
+	android:label
+		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:10:9-41
 	android:fullBackupContent
 		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:8:9-54
 	android:roundIcon
-		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:10:9-54
+		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:11:9-54
 	tools:targetApi
-		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:13:9-29
+		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:14:9-29
 	android:icon
 		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:9:9-43
 	android:allowBackup
 		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:6:9-35
 	android:theme
-		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:12:9-40
+		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:13:9-40
 	android:dataExtractionRules
 		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:7:9-65
 activity#com.echoreading.UserProfileActivity
-ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:14:9-18:40
+ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:15:9-19:40
 	android:parentActivityName
-		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:16:13-55
+		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:17:13-55
 	android:label
-		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:17:13-50
+		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:18:13-50
 	android:exported
-		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:18:13-37
+		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:19:13-37
 	android:name
-		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:15:13-48
+		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:16:13-48
 activity#com.echoreading.SettingsActivity
-ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:19:9-23:58
+ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:20:9-24:58
 	android:parentActivityName
-		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:23:13-55
+		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:24:13-55
 	android:label
-		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:22:13-51
+		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:23:13-51
 	android:exported
-		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:21:13-37
+		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:22:13-37
 	android:name
-		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:20:13-45
+		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:21:13-45
 activity#com.echoreading.RegisterActivity
-ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:24:9-26:40
+ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:25:9-27:40
 	android:exported
-		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:26:13-37
+		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:27:13-37
 	android:name
-		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:25:13-45
+		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:26:13-45
 activity#com.echoreading.HomeActivity
-ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:27:9-30:48
+ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:28:9-31:48
 	android:label
-		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:30:13-45
+		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:31:13-45
 	android:exported
-		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:29:13-37
+		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:30:13-37
 	android:name
-		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:28:13-41
+		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:29:13-41
 activity#com.echoreading.LoginActivity
-ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:31:9-33:40
+ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:32:9-34:40
 	android:exported
-		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:33:13-37
+		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:34:13-37
 	android:name
-		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:32:13-42
+		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:33:13-42
 activity#com.echoreading.MainActivity
-ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:34:9-42:20
+ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:35:9-43:20
 	android:exported
-		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:36:13-36
+		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:37:13-36
 	android:name
-		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:35:13-41
+		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:36:13-41
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:37:13-41:29
+ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:38:13-42:29
 action#android.intent.action.MAIN
-ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:38:17-69
+ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:39:17-69
 	android:name
-		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:38:25-66
+		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:39:25-66
 category#android.intent.category.LAUNCHER
-ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:40:17-77
+ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:41:17-77
 	android:name
-		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:40:27-74
+		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:41:27-74
 meta-data#preloaded_fonts
-ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:44:9-46:57
+ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:45:9-47:57
 	android:resource
-		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:46:13-54
+		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:47:13-54
 	android:name
-		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:45:13-43
+		ADDED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml:46:13-43
 uses-sdk
 INJECTED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from /home/bartolomeu-hangalo/StudioProjects/EchoReading/app/src/main/AndroidManifest.xml
