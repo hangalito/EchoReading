@@ -1,4 +1,4 @@
-#Sun Sep 10 16:58:17 WAT 2023
+#Wed Sep 13 17:31:05 WAT 2023
 base.0=/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/build/intermediates/dex/debug/mergeExtDexDebug/classes.dex
 base.1=/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/build/intermediates/dex/debug/mergeProjectDexDebug/0/classes.dex
 base.2=/home/bartolomeu-hangalo/StudioProjects/EchoReading/app/build/intermediates/dex/debug/mergeProjectDexDebug/2/classes.dex
