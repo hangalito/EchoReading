@@ -105,7 +105,9 @@ import com.echoreading.reader.ReaderAudioCache
 import com.echoreading.reader.ReaderState
 import com.echoreading.reader.ReadingHistory
 import com.echoreading.reader.WavFiles
+import com.echoreading.ui.component.ElevenLabsSettingsSection
 import com.echoreading.voice.OfflineVoice
+import com.echoreading.voice.ElevenLabsAuth
 import com.echoreading.voice.VoiceOption
 import com.echoreading.speech.OfflineSpeech
 import com.echoreading.speech.ModelDownloadSnapshot
@@ -566,6 +568,8 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
     val context = LocalContext.current
     val snapshot by ReaderState.snapshot.collectAsState()
     val scope = rememberCoroutineScope()
+    val elevenLabsRevision by ElevenLabsAuth.revision.collectAsState()
+    val onlineReading = remember(elevenLabsRevision) { ElevenLabsAuth.useForReading(context) }
     var showTranscription by rememberSaveable { mutableStateOf(false) }
     val scrollState = rememberScrollState()
 
@@ -740,7 +744,8 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
                     Column(Modifier.weight(1f)) {
                         Text("VOZ EM USO", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                         Text(
-                            activeVoice.label,
+                            if (onlineReading) "ElevenLabs · ${ElevenLabsAuth.selectedVoiceName(context) ?: "Voz online"}"
+                            else activeVoice.label,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis
@@ -805,7 +810,7 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
                 }
 
                 // Audio Sample Audition Button
-                Button(
+                if (!onlineReading) Button(
                     onClick = { playSample(activeVoice, snapshot.speed) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = CircleShape,
@@ -826,8 +831,15 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
                         style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
                     )
                 }
+                if (onlineReading) Text(
+                    "A velocidade online depende das opções oferecidas pela voz ElevenLabs.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
+
+        ElevenLabsSettingsSection()
 
         // -------------------------------------------------------------------
         // Vozes disponíveis no dispositivo
@@ -864,13 +876,14 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
             }
 
             installedVoices.forEach { voice ->
-                val isSelected = snapshot.voiceId == voice.id
+                val isSelected = !onlineReading && snapshot.voiceId == voice.id
                 val isPlaying = playingVoiceId == voice.id
 
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
+                            ElevenLabsAuth.setUseForReading(context, false)
                             ReaderState.snapshot.value = ReaderState.snapshot.value.copy(voiceId = voice.id)
                             ReaderState.save(context)
                         },
@@ -1146,6 +1159,7 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
                                                             downloadCopiedMb = copied / (1024f * 1024f)
                                                         }
                                                     }
+                                                    ElevenLabsAuth.setUseForReading(context, false)
                                                     ReaderState.snapshot.value = ReaderState.snapshot.value.copy(voiceId = voice.id)
                                                     ReaderState.save(context)
                                                     Toast.makeText(context, "${voice.label} pronta a usar!", Toast.LENGTH_SHORT).show()

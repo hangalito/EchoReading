@@ -410,6 +410,14 @@ fun ReaderHome() {
                         }
                     }
 
+                    if (snapshot.status == ReadingStatus.ERROR && !snapshot.error.isNullOrBlank()) {
+                        Text(
+                            snapshot.error.orEmpty(),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+
                     // Progress Bar / Scrubber & Time
                     val hasDuration = snapshot.durationMs > 0
                     val progress =

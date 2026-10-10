@@ -28,6 +28,8 @@ import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
 import com.echoreading.R
 import com.echoreading.MainActivity
+import com.echoreading.voice.ElevenLabsAuth
+import com.echoreading.voice.ElevenLabsMcp
 import com.echoreading.voice.OfflineVoice
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
@@ -52,6 +54,8 @@ class ReaderPlaybackService : MediaSessionService() {
     private var generation: Job? = null
     private var audioDir: File? = null
     private var completed = false
+    private var usingElevenLabs = false
+    private var providerKey = "offline"
     private var wantsPlayback = false
     private var pendingPosition: Long? = null
     @Volatile private var generationId = 0
@@ -226,11 +230,27 @@ class ReaderPlaybackService : MediaSessionService() {
             return
         }
         getSystemService(NotificationManager::class.java)?.cancel(STATUS_NOTIFICATION_ID)
+        val onlineVoiceId = ElevenLabsAuth.selectedVoiceId(this)
+            ?.takeIf { ElevenLabsAuth.useForReading(this) }
+        if (onlineVoiceId != null &&
+            markdown.spokenText.length > ElevenLabsAuth.maxCharactersPerReading(this)
+        ) {
+            ReaderState.snapshot.value = ReaderState.snapshot.value.copy(
+                status = ReadingStatus.ERROR,
+                error = "O texto excede o limite ElevenLabs definido para esta aplicação.",
+            )
+            ReaderState.save(this)
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
+            return
+        }
         val saveHistory = getSharedPreferences("settings", MODE_PRIVATE).getBoolean("save_history", true)
         if (saveHistory) {
             scope.launch { ReadingHistory.add(this@ReaderPlaybackService, text) }
         }
-        val cached = ReaderAudioCache.get(text, voiceId, speed)
+        usingElevenLabs = onlineVoiceId != null
+        providerKey = onlineVoiceId?.let { "elevenlabs:$it" } ?: "offline"
+        val cached = ReaderAudioCache.get(text, voiceId, speed, providerKey = providerKey)
         if (cached != null) {
             playFromCache(cached, positionMs)
             return
@@ -270,7 +290,7 @@ class ReaderPlaybackService : MediaSessionService() {
         generation = scope.launch(Dispatchers.IO) {
             try {
                 var targetVoice = OfflineVoice.option(this@ReaderPlaybackService, voiceId)
-                if (!OfflineVoice.isInstalled(this@ReaderPlaybackService, targetVoice)) {
+                if (onlineVoiceId == null && !OfflineVoice.isInstalled(this@ReaderPlaybackService, targetVoice)) {
                     if (targetVoice.url != null) {
                         try {
                             OfflineVoice.install(this@ReaderPlaybackService, targetVoice) { _, _ -> }
@@ -301,13 +321,24 @@ class ReaderPlaybackService : MediaSessionService() {
                     }
                 }
 
+                val onlineReader = onlineVoiceId?.let {
+                    ElevenLabsMcp.openReader(this@ReaderPlaybackService, it, speed)
+                }
                 chunks.forEachIndexed { index, chunk ->
                     if (!isActive || generationId != id) return@launch
-                    // ponytail: native generation cannot stop mid-chunk; discard it after a stop.
-                    val audio = OfflineVoice.synthesize(this@ReaderPlaybackService, chunk.text, targetVoice.id, speed)
+                    val file: File
+                    val duration: Long
+                    if (onlineReader != null) {
+                        // ponytail: blocking HTTP can finish after Stop; generationId discards that audio.
+                        file = File(destination, "$index.mp3")
+                        duration = onlineReader.synthesize(chunk.text, file)
+                    } else {
+                        // ponytail: native generation cannot stop mid-chunk; discard it after a stop.
+                        val audio = OfflineVoice.synthesize(this@ReaderPlaybackService, chunk.text, targetVoice.id, speed)
+                        file = File(destination, "$index.wav")
+                        duration = WavFiles.write(file, audio)
+                    }
                     if (!isActive || generationId != id) return@launch
-                    val file = File(destination, "$index.wav")
-                    val duration = WavFiles.write(file, audio)
                     withContext(Dispatchers.Main) { addAudio(id, index, file, duration, text, targetVoice.id) }
                 }
                 withContext(Dispatchers.Main) {
@@ -330,6 +361,8 @@ class ReaderPlaybackService : MediaSessionService() {
     }
 
     private fun playFromCache(cached: CachedReading, positionMs: Long) {
+        providerKey = cached.providerKey
+        usingElevenLabs = providerKey.startsWith("elevenlabs:")
         val previous = generation
         val previousDir = audioDir
         generationId++
@@ -353,7 +386,8 @@ class ReaderPlaybackService : MediaSessionService() {
 
         val mediaItems = cached.durations.mapIndexed { index, duration ->
             timeline.add(duration)
-            val file = File(cached.audioDir, "$index.wav")
+            val extension = if (usingElevenLabs) "mp3" else "wav"
+            val file = File(cached.audioDir, "$index.$extension")
             MediaItem.Builder()
                 .setMediaId(index.toString())
                 .setUri(Uri.fromFile(file))
@@ -511,7 +545,9 @@ class ReaderPlaybackService : MediaSessionService() {
         val position = if (atEnd) 0L else currentPosition()
         val currentSnapshot = ReaderState.snapshot.value
         val dir = audioDir
-        if (atEnd && completed && dir != null && chunks.isNotEmpty() && timeline.size == chunks.size) {
+        if (atEnd && completed && dir != null && chunks.isNotEmpty() &&
+            timeline.size == chunks.size
+        ) {
             ReaderAudioCache.put(
                 text = currentSnapshot.text,
                 voiceId = currentSnapshot.voiceId,
@@ -519,6 +555,7 @@ class ReaderPlaybackService : MediaSessionService() {
                 chunks = chunks,
                 durations = timeline.durations(),
                 audioDir = dir,
+                providerKey = providerKey,
             )
         }
         if (atEnd) {
@@ -612,7 +649,9 @@ class ReaderPlaybackService : MediaSessionService() {
         voiceId: String = ReaderState.snapshot.value.voiceId,
     ): MediaMetadata {
         val title = formatTitle(text, getString(R.string.app_name))
-        val voiceLabel = OfflineVoice.option(this, voiceId).label
+        val voiceLabel = if (usingElevenLabs) {
+            "ElevenLabs · ${ElevenLabsAuth.selectedVoiceName(this) ?: "Voz online"}"
+        } else OfflineVoice.option(this, voiceId).label
         return MediaMetadata.Builder()
             .setTitle(title)
             .setDisplayTitle(title)

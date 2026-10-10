@@ -1,0 +1,41 @@
+package com.echoreading
+
+import com.echoreading.voice.ElevenLabsMcp
+import com.echoreading.voice.ElevenLabsQuota
+import com.echoreading.voice.ElevenLabsVoice
+import org.json.JSONArray
+import org.json.JSONObject
+import org.junit.Assert.assertEquals
+import org.junit.Test
+
+class ElevenLabsMcpTest {
+    @Test
+    fun readsVoicesFromMcpTextContent() {
+        val result = JSONObject().put("content", JSONArray().put(JSONObject()
+            .put("type", "text")
+            .put("text", """[{"id":"voice-1","name":"Joana"},{"voice_id":"voice-2","name":"Miguel"}]""")))
+
+        assertEquals(
+            listOf(ElevenLabsVoice("voice-1", "Joana"), ElevenLabsVoice("voice-2", "Miguel")),
+            ElevenLabsMcp.parseVoices(result),
+        )
+    }
+
+    @Test
+    fun readsUsageWhenSubscriptionToolExists() {
+        val result = JSONObject().put("content", JSONArray().put(JSONObject()
+            .put("type", "text")
+            .put("text", """{"tier":"starter","character_count":2500,"character_limit":10000}""")))
+
+        assertEquals(ElevenLabsQuota("starter", 2500, 10000), ElevenLabsMcp.parseQuota(result))
+    }
+
+    @Test
+    fun readsShortLivedAudioLink() {
+        val result = JSONObject().put("content", JSONArray().put(JSONObject()
+            .put("type", "text")
+            .put("text", "Áudio: https://cdn.elevenlabs.io/signed/sample.mp3")))
+
+        assertEquals("https://cdn.elevenlabs.io/signed/sample.mp3", ElevenLabsMcp.findAudioUrl(result))
+    }
+}

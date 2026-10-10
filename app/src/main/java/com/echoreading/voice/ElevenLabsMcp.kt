@@ -1,0 +1,262 @@
+package com.echoreading.voice
+
+import android.content.Context
+import android.media.MediaMetadataRetriever
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import org.json.JSONObject
+import org.json.JSONTokener
+import java.io.File
+import java.io.IOException
+import java.net.HttpURLConnection
+import java.net.URL
+import java.util.concurrent.atomic.AtomicInteger
+
+data class ElevenLabsVoice(val id: String, val name: String)
+data class ElevenLabsQuota(val tier: String, val used: Long, val limit: Long)
+
+/** Small Streamable HTTP MCP client for the OAuth-protected ElevenLabs host. */
+object ElevenLabsMcp {
+    private val nextId = AtomicInteger(1)
+
+    class Reader internal constructor(private val generate: suspend (String, File) -> Long) {
+        suspend fun synthesize(text: String, output: File): Long = generate(text, output)
+    }
+
+    suspend fun voices(context: Context, search: String = ""): Result<List<ElevenLabsVoice>> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val session = connect(context)
+                val tool = session.tool("search_voices", "search_voice_library", "list_voices", "voices_search")
+                    ?: error("O catálogo de vozes não está disponível nesta ligação ElevenLabs.")
+                val arguments = JSONObject()
+                if (search.isNotBlank()) arguments.put("search", search)
+                parseVoices(session.call(tool, arguments))
+            }
+        }
+
+    suspend fun quota(context: Context): Result<ElevenLabsQuota> = withContext(Dispatchers.IO) {
+        runCatching {
+            val session = connect(context)
+            val tool = session.tool("check_subscription", "get_user_subscription", "subscription")
+                ?: error("A ElevenLabs não disponibiliza os limites da conta nesta ligação.")
+            parseQuota(session.call(tool, JSONObject()))
+                ?: error("Não foi possível interpretar os limites da conta.")
+        }
+    }
+
+    suspend fun openReader(context: Context, voiceId: String, speed: Float): Reader = withContext(Dispatchers.IO) {
+        val session = connect(context)
+        val tool = session.tool("text_to_speech", "generate_speech", "convert_text_to_speech")
+            ?: error("A geração de voz não está disponível nesta ligação ElevenLabs.")
+        val voiceParameter = when {
+            session.accepts(tool, "voice_id") -> "voice_id"
+            session.accepts(tool, "voiceId") -> "voiceId"
+            else -> error("Esta ferramenta ElevenLabs não aceita seleção de voz.")
+        }
+        Reader { text, output ->
+            withContext(Dispatchers.IO) {
+                val arguments = JSONObject().put("text", text).put(voiceParameter, voiceId)
+                if (session.accepts(tool, "speed")) arguments.put("speed", speed.toDouble())
+                val result = session.call(tool, arguments)
+                val downloadUrl = findAudioUrl(result)
+                    ?: error("A ElevenLabs não devolveu um ficheiro de áudio.")
+                download(downloadUrl, output)
+                MediaMetadataRetriever().use { retriever ->
+                    retriever.setDataSource(output.absolutePath)
+                    val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                        ?.toLongOrNull() ?: 0L
+                    if (duration <= 0L) throw IOException("Duração de áudio inválida.")
+                    duration
+                }
+            }
+        }
+    }
+
+    private suspend fun connect(context: Context): Session {
+        val token = ElevenLabsAuth.accessToken(context)
+            ?: error("Inicie sessão na ElevenLabs antes de utilizar este provedor.")
+        val session = Session(token)
+        session.initialize()
+        return session
+    }
+
+    private class Session(private val token: String) {
+        private var sessionId: String? = null
+        private var tools: Map<String, JSONObject> = emptyMap()
+
+        fun initialize() {
+            val params = JSONObject()
+                .put("protocolVersion", "2025-06-18")
+                .put("capabilities", JSONObject())
+                .put("clientInfo", JSONObject().put("name", "Eco Leitura").put("version", "2.2.0"))
+            request("initialize", params)
+            request("notifications/initialized", JSONObject(), notification = true)
+            val discovered = linkedMapOf<String, JSONObject>()
+            val seenCursors = mutableSetOf<String>()
+            var cursor: String? = null
+            do {
+                val arguments = JSONObject()
+                cursor?.let { arguments.put("cursor", it) }
+                val result = request("tools/list", arguments).optJSONObject("result") ?: JSONObject()
+                val listing = result.optJSONArray("tools") ?: JSONArray()
+                for (index in 0 until listing.length()) {
+                    listing.optJSONObject(index)?.let { tool ->
+                        discovered[tool.optString("name")] = tool
+                    }
+                }
+                cursor = result.optString("nextCursor").takeIf { it.isNotBlank() }
+            } while (cursor?.let { seenCursors.add(it) } == true && discovered.size < 500)
+            tools = discovered
+        }
+
+        fun tool(vararg preferred: String): String? = preferred.firstNotNullOfOrNull { wanted ->
+            tools.keys.firstOrNull { name ->
+                val normalized = name.lowercase().replace('-', '_')
+                normalized == wanted || normalized.endsWith(".$wanted") || normalized.endsWith("__$wanted")
+            }
+        }
+
+        fun accepts(tool: String, parameter: String): Boolean =
+            tools[tool]?.optJSONObject("inputSchema")?.optJSONObject("properties")?.has(parameter) == true
+
+        fun call(name: String, arguments: JSONObject): JSONObject {
+            val response = request("tools/call", JSONObject().put("name", name).put("arguments", arguments))
+            val result = response.optJSONObject("result") ?: error("Resposta MCP inválida.")
+            if (result.optBoolean("isError")) throw IOException("A ElevenLabs recusou a operação.")
+            return result
+        }
+
+        private fun request(method: String, params: JSONObject, notification: Boolean = false): JSONObject {
+            val body = JSONObject().put("jsonrpc", "2.0").put("method", method).put("params", params)
+            if (!notification) body.put("id", nextId.getAndIncrement())
+            val connection = URL(ElevenLabsAuth.RESOURCE).openConnection() as HttpURLConnection
+            try {
+                connection.requestMethod = "POST"
+                connection.instanceFollowRedirects = false
+                connection.connectTimeout = 20_000
+                connection.readTimeout = 60_000
+                connection.doOutput = true
+                connection.setRequestProperty("Authorization", "Bearer $token")
+                connection.setRequestProperty("Content-Type", "application/json")
+                connection.setRequestProperty("Accept", "application/json, text/event-stream")
+                connection.setRequestProperty("MCP-Protocol-Version", "2025-06-18")
+                sessionId?.let { connection.setRequestProperty("Mcp-Session-Id", it) }
+                connection.outputStream.use { it.write(body.toString().toByteArray(Charsets.UTF_8)) }
+                if (connection.responseCode !in 200..299) {
+                    throw IOException("ElevenLabs MCP HTTP ${connection.responseCode}")
+                }
+                connection.getHeaderField("Mcp-Session-Id")?.let { sessionId = it }
+                if (notification || connection.responseCode == 202) return JSONObject()
+                if (connection.contentType?.contains("text/event-stream") == true) {
+                    connection.inputStream.bufferedReader().use { reader ->
+                        while (true) {
+                            val line = reader.readLine() ?: break
+                            if (line.startsWith("data:")) {
+                                val event = runCatching { JSONObject(line.removePrefix("data:").trim()) }.getOrNull()
+                                if (event != null && (event.has("result") || event.has("error"))) return event
+                            }
+                        }
+                    }
+                    throw IOException("Resposta MCP vazia.")
+                }
+                return JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
+            } finally {
+                connection.disconnect()
+            }
+        }
+    }
+
+    internal fun parseVoices(result: JSONObject): List<ElevenLabsVoice> {
+        val found = linkedMapOf<String, ElevenLabsVoice>()
+        fun visit(value: Any?, depth: Int) {
+            if (depth > 6) return
+            when (value) {
+                is JSONObject -> {
+                    val id = value.optString("voice_id").ifBlank { value.optString("id") }
+                    val name = value.optString("name")
+                    if (id.isNotBlank() && name.isNotBlank()) found[id] = ElevenLabsVoice(id, name)
+                    value.keys().forEach { visit(value.opt(it), depth + 1) }
+                }
+                is JSONArray -> (0 until value.length()).forEach { visit(value.opt(it), depth + 1) }
+                is String -> if (value.trimStart().startsWith("[") || value.trimStart().startsWith("{")) {
+                    runCatching { JSONTokener(value).nextValue() }.getOrNull()?.let { visit(it, depth + 1) }
+                }
+            }
+        }
+        visit(result, 0)
+        return found.values.toList()
+    }
+
+    internal fun parseQuota(result: JSONObject): ElevenLabsQuota? {
+        val values = sequenceOf(result.optJSONObject("structuredContent"), result)
+            .filterNotNull().plus((result.optJSONArray("content") ?: JSONArray()).let { content ->
+                (0 until content.length()).mapNotNull { index ->
+                    content.optJSONObject(index)?.optString("text")?.let { text ->
+                        runCatching { JSONObject(text) }.getOrNull()
+                    }
+                }.asSequence()
+            })
+        return values.firstNotNullOfOrNull { item ->
+            val subscription = item.optJSONObject("subscription") ?: item
+            val used = subscription.optLong("character_count", -1)
+            val limit = subscription.optLong("character_limit", -1)
+            if (used < 0 || limit <= 0) null
+            else ElevenLabsQuota(subscription.optString("tier", "Conta"), used, limit)
+        }
+    }
+
+    internal fun findAudioUrl(result: JSONObject): String? {
+        fun find(value: Any?, depth: Int): String? {
+            if (depth > 6) return null
+            return when (value) {
+                is JSONObject -> {
+                    listOf("audio_url", "download_url", "url").firstNotNullOfOrNull { key ->
+                        value.optString(key).takeIf { it.startsWith("https://") }
+                    } ?: value.keys().asSequence().firstNotNullOfOrNull { find(value.opt(it), depth + 1) }
+                }
+                is JSONArray -> (0 until value.length()).firstNotNullOfOrNull { find(value.opt(it), depth + 1) }
+                is String -> Regex("https://[^\\s\\]\\)\\>\"']+").find(value)?.value
+                else -> null
+            }
+        }
+        return find(result, 0)
+    }
+
+    private suspend fun download(url: String, output: File) {
+        val connection = URL(url).openConnection() as HttpURLConnection
+        var complete = false
+        try {
+            connection.connectTimeout = 20_000
+            connection.readTimeout = 60_000
+            if (connection.responseCode !in 200..299) throw IOException("Áudio HTTP ${connection.responseCode}")
+            val contentType = connection.contentType.orEmpty().lowercase()
+            if (!contentType.startsWith("audio/") && !contentType.startsWith("application/octet-stream")) {
+                throw IOException("Resposta sem áudio.")
+            }
+            output.parentFile?.mkdirs()
+            connection.inputStream.use { input ->
+                output.outputStream().use { destination ->
+                    val buffer = ByteArray(8192)
+                    var total = 0L
+                    while (true) {
+                        currentCoroutineContext().ensureActive()
+                        val count = input.read(buffer)
+                        if (count < 0) break
+                        total += count
+                        if (total > 25L * 1024 * 1024) throw IOException("Áudio demasiado grande.")
+                        destination.write(buffer, 0, count)
+                    }
+                }
+            }
+            if (output.length() == 0L) throw IOException("Áudio vazio.")
+            complete = true
+        } finally {
+            connection.disconnect()
+            if (!complete) output.delete()
+        }
+    }
+}
