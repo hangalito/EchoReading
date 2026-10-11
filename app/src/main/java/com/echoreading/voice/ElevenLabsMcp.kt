@@ -87,7 +87,9 @@ object ElevenLabsMcp {
         Reader { text, output ->
             withContext(Dispatchers.IO) {
                 val arguments = JSONObject().put("text", text).put(voiceParameter, voiceId)
-                if (session.accepts(tool, "speed")) arguments.put("speed", speed.toDouble())
+                if (session.accepts(tool, "model_id")) arguments.put("model_id", "eleven_multilingual_v2")
+                if (session.accepts(tool, "output_format")) arguments.put("output_format", "mp3_44100_128")
+                if (session.accepts(tool, "speed")) arguments.put("speed", speed.coerceIn(0.7f, 1.2f).toDouble())
                 val result = session.call(tool, arguments)
                 val downloadUrl = findAudioUrl(result)
                     ?: error("A ElevenLabs não devolveu um ficheiro de áudio.")
@@ -153,7 +155,7 @@ object ElevenLabsMcp {
         fun call(name: String, arguments: JSONObject): JSONObject {
             val response = request("tools/call", JSONObject().put("name", name).put("arguments", arguments))
             val result = response.optJSONObject("result") ?: error("Resposta MCP inválida.")
-            if (result.optBoolean("isError")) throw IOException("A ElevenLabs recusou a operação.")
+            toolError(result)?.let { throw IOException(it) }
             return result
         }
 
@@ -202,6 +204,16 @@ object ElevenLabsMcp {
             val error = response.optJSONObject("error") ?: return response
             throw IOException("ElevenLabs MCP: ${error.optString("message", "Erro desconhecido").take(160)}")
         }
+    }
+
+    internal fun toolError(result: JSONObject): String? {
+        if (!result.optBoolean("isError")) return null
+        val content = result.optJSONArray("content")
+        val detail = (0 until (content?.length() ?: 0)).firstNotNullOfOrNull { index ->
+            content?.optJSONObject(index)?.optString("text")?.takeIf { it.isNotBlank() }
+        } ?: result.optJSONObject("structuredContent")?.optString("message")
+        return detail?.trim()?.take(300)?.takeIf { it.isNotBlank() }
+            ?: "A ElevenLabs recusou a operação."
     }
 
     internal fun parseVoices(result: JSONObject): List<ElevenLabsVoice> {

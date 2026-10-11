@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +35,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -52,6 +55,9 @@ import com.echoreading.R
 import com.echoreading.reader.ReaderSnapshot
 import com.echoreading.reader.ReaderState
 import com.echoreading.voice.OfflineVoice
+import com.echoreading.voice.ElevenLabsAuth
+import com.echoreading.voice.ElevenLabsMcp
+import com.echoreading.voice.ElevenLabsVoice
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -183,6 +189,27 @@ fun StitchStatusVoiceBar(
     var expanded by rememberSaveable { mutableStateOf(false) }
     var downloading by remember { mutableStateOf<String?>(null) }
     var progress by remember { mutableFloatStateOf(0f) }
+    val providerRevision by ElevenLabsAuth.revision.collectAsState()
+    val onlineAvailable = remember(providerRevision) {
+        ElevenLabsAuth.isEnabled(ctx) && ElevenLabsAuth.isConnected(ctx)
+    }
+    val onlineReading = remember(providerRevision) { ElevenLabsAuth.useForReading(ctx) }
+    val onlineVoiceId = remember(providerRevision) { ElevenLabsAuth.selectedVoiceId(ctx) }
+    val onlineVoiceName = remember(providerRevision) { ElevenLabsAuth.selectedVoiceName(ctx) }
+    var onlineVoices by remember { mutableStateOf<List<ElevenLabsVoice>>(emptyList()) }
+    var onlineLoading by remember { mutableStateOf(false) }
+    var onlineError by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(expanded, onlineAvailable) {
+        if (expanded && onlineAvailable) {
+            onlineLoading = true
+            onlineError = null
+            ElevenLabsMcp.voices(ctx).onSuccess { onlineVoices = it.voices }.onFailure {
+                onlineError = it.message ?: "Não foi possível carregar as vozes ElevenLabs."
+            }
+            onlineLoading = false
+        }
+    }
 
     Row(
         modifier
@@ -207,7 +234,7 @@ fun StitchStatusVoiceBar(
                         .background(colorScheme.secondary, CircleShape)
                 )
                 Text(
-                    "Motor TTS Ativo",
+                    if (onlineReading) "ElevenLabs online" else "Motor TTS offline",
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                     color = colorScheme.onSurfaceVariant
                 )
@@ -234,9 +261,9 @@ fun StitchStatusVoiceBar(
                         modifier = Modifier.size(16.dp),
                         tint = colorScheme.secondary
                     )
-                    val shortName =
-                        OfflineVoice.option(ctx, snapshot.voiceId).label.split("·").lastOrNull()
-                            ?.trim() ?: "Tugão"
+                    val shortName = if (onlineReading) onlineVoiceName ?: "ElevenLabs"
+                    else OfflineVoice.option(ctx, snapshot.voiceId).label.split("·").lastOrNull()
+                        ?.trim() ?: "Tugão"
                     Text(
                         "$shortName • ${String.format(Locale.US, "%.1f", snapshot.speed)}x",
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
@@ -252,6 +279,36 @@ fun StitchStatusVoiceBar(
             }
 
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                if (onlineAvailable) {
+                    Text("ElevenLabs", modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        style = MaterialTheme.typography.labelSmall, color = colorScheme.onSurfaceVariant)
+                    if (onlineVoiceId != null && onlineVoices.none { it.id == onlineVoiceId }) {
+                        DropdownMenuItem(
+                            text = { Text("ElevenLabs · ${onlineVoiceName ?: "Voz selecionada"}") },
+                            onClick = {
+                                ElevenLabsAuth.setUseForReading(ctx, true)
+                                expanded = false
+                            },
+                        )
+                    }
+                    if (onlineLoading) CircularProgressIndicator(Modifier.padding(16.dp).size(20.dp))
+                    onlineError?.let { message ->
+                        Text(message, modifier = Modifier.padding(16.dp),
+                            style = MaterialTheme.typography.bodySmall, color = colorScheme.error)
+                    }
+                    onlineVoices.take(30).forEach { voice ->
+                        DropdownMenuItem(
+                            text = { Text("ElevenLabs · ${voice.name}") },
+                            onClick = {
+                                ElevenLabsAuth.selectVoice(ctx, voice.id, voice.name)
+                                ElevenLabsAuth.setUseForReading(ctx, true)
+                                expanded = false
+                            },
+                        )
+                    }
+                }
+                Text("No dispositivo", modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    style = MaterialTheme.typography.labelSmall, color = colorScheme.onSurfaceVariant)
                 OfflineVoice.allVoices(ctx).forEach { voice ->
                     val installed = OfflineVoice.isInstalled(ctx, voice)
                     DropdownMenuItem(
@@ -267,6 +324,7 @@ fun StitchStatusVoiceBar(
                         onClick = {
                             expanded = false
                             if (installed) {
+                                ElevenLabsAuth.setUseForReading(ctx, false)
                                 ReaderState.snapshot.value =
                                     ReaderState.snapshot.value.copy(voiceId = voice.id)
                                 ReaderState.save(ctx)
@@ -277,6 +335,7 @@ fun StitchStatusVoiceBar(
                                         OfflineVoice.install(ctx, voice) { copied, total ->
                                             if (total > 0) progress = copied.toFloat() / total
                                         }
+                                        ElevenLabsAuth.setUseForReading(ctx, false)
                                         ReaderState.snapshot.value =
                                             ReaderState.snapshot.value.copy(voiceId = voice.id)
                                         ReaderState.save(ctx)

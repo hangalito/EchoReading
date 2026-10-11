@@ -48,4 +48,13 @@ class ElevenLabsMcpTest {
 
         assertEquals("https://cdn.elevenlabs.io/signed/sample.mp3", ElevenLabsMcp.findAudioUrl(result))
     }
+
+    @Test
+    fun displaysProviderReasonForRejectedSpeech() {
+        val result = JSONObject().put("isError", true).put("content", JSONArray().put(JSONObject()
+            .put("type", "text")
+            .put("text", "Voice is unavailable for this account")))
+
+        assertEquals("Voice is unavailable for this account", ElevenLabsMcp.toolError(result))
+    }
 }
