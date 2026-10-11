@@ -28,7 +28,7 @@ object ElevenLabsAuth {
     const val CLIENT_ID_URL = "https://jjhangalo.github.io/EchoReading/oauth-client.json"
     const val RESOURCE = "https://api.us.elevenlabs.io/v1/mcp"
     const val ISSUER = "https://api.us.elevenlabs.io"
-    const val REDIRECT_URI = "com.echoreading://oauth/elevenlabs"
+    const val REDIRECT_URI = "https://jjhangalo.github.io/EchoReading/oauth-callback.html"
     private const val AUTH_URL = "https://elevenlabs.io/app/oauth/authorize"
     private const val TOKEN_URL = "https://api.us.elevenlabs.io/v1/oauth/token"
     private const val REVOKE_URL = "https://api.us.elevenlabs.io/v1/oauth/revoke"
