@@ -16,6 +16,7 @@ import java.net.URL
 import java.util.concurrent.atomic.AtomicInteger
 
 data class ElevenLabsVoice(val id: String, val name: String)
+data class ElevenLabsVoiceCatalog(val voices: List<ElevenLabsVoice>, val fromAccount: Boolean)
 data class ElevenLabsQuota(val tier: String, val used: Long, val limit: Long)
 
 /** Small Streamable HTTP MCP client for the OAuth-protected ElevenLabs host. */
@@ -26,17 +27,43 @@ object ElevenLabsMcp {
         suspend fun synthesize(text: String, output: File): Long = generate(text, output)
     }
 
-    suspend fun voices(context: Context, search: String = ""): Result<List<ElevenLabsVoice>> =
+    suspend fun voices(context: Context, search: String = ""): Result<ElevenLabsVoiceCatalog> =
         withContext(Dispatchers.IO) {
             runCatching {
                 val session = connect(context)
-                val tool = session.tool("search_voices", "search_voice_library", "list_voices", "voices_search")
-                    ?: error("O catálogo de vozes não está disponível nesta ligação ElevenLabs.")
-                val arguments = JSONObject()
-                if (search.isNotBlank()) arguments.put("search", search)
-                parseVoices(session.call(tool, arguments))
+                val tool = session.tool("search_voices", "list_voices", "search_voice_library", "voices_search")
+                if (tool == null) {
+                    ElevenLabsVoiceCatalog(publicVoices(search), fromAccount = false)
+                } else {
+                    val arguments = JSONObject()
+                    if (search.isNotBlank()) {
+                        val field = listOf("search", "query", "name").firstOrNull { session.accepts(tool, it) }
+                        field?.let { arguments.put(it, search) }
+                    }
+                    val listed = parseVoices(session.call(tool, arguments))
+                    ElevenLabsVoiceCatalog(filterVoices(listed, search), fromAccount = true)
+                }
             }
         }
+
+    private fun publicVoices(search: String): List<ElevenLabsVoice> {
+        val connection = URL("https://api.elevenlabs.io/v1/voices").openConnection() as HttpURLConnection
+        try {
+            connection.instanceFollowRedirects = false
+            connection.connectTimeout = 20_000
+            connection.readTimeout = 20_000
+            if (connection.responseCode !in 200..299) {
+                throw IOException("Catálogo ElevenLabs HTTP ${connection.responseCode}")
+            }
+            val response = JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
+            return filterVoices(parseVoices(response), search)
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    internal fun filterVoices(voices: List<ElevenLabsVoice>, search: String): List<ElevenLabsVoice> =
+        if (search.isBlank()) voices else voices.filter { it.name.contains(search.trim(), ignoreCase = true) }
 
     suspend fun quota(context: Context): Result<ElevenLabsQuota> = withContext(Dispatchers.IO) {
         runCatching {
@@ -116,7 +143,7 @@ object ElevenLabsMcp {
         fun tool(vararg preferred: String): String? = preferred.firstNotNullOfOrNull { wanted ->
             tools.keys.firstOrNull { name ->
                 val normalized = name.lowercase().replace('-', '_')
-                normalized == wanted || normalized.endsWith(".$wanted") || normalized.endsWith("__$wanted")
+                normalized == wanted || normalized.endsWith(".$wanted") || normalized.endsWith("_$wanted")
             }
         }
 
@@ -157,16 +184,23 @@ object ElevenLabsMcp {
                             val line = reader.readLine() ?: break
                             if (line.startsWith("data:")) {
                                 val event = runCatching { JSONObject(line.removePrefix("data:").trim()) }.getOrNull()
-                                if (event != null && (event.has("result") || event.has("error"))) return event
+                                if (event != null && (event.has("result") || event.has("error"))) {
+                                    return checkedResponse(event)
+                                }
                             }
                         }
                     }
                     throw IOException("Resposta MCP vazia.")
                 }
-                return JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
+                return checkedResponse(JSONObject(connection.inputStream.bufferedReader().use { it.readText() }))
             } finally {
                 connection.disconnect()
             }
+        }
+
+        private fun checkedResponse(response: JSONObject): JSONObject {
+            val error = response.optJSONObject("error") ?: return response
+            throw IOException("ElevenLabs MCP: ${error.optString("message", "Erro desconhecido").take(160)}")
         }
     }
 

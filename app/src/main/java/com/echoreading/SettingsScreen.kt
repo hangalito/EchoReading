@@ -570,7 +570,7 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
     val scope = rememberCoroutineScope()
     val elevenLabsRevision by ElevenLabsAuth.revision.collectAsState()
     val onlineReading = remember(elevenLabsRevision) { ElevenLabsAuth.useForReading(context) }
-    var showTranscription by rememberSaveable { mutableStateOf(false) }
+    var selectedTab by rememberSaveable { mutableStateOf("leitura") }
     val scrollState = rememberScrollState()
 
     var downloadingId by remember { mutableStateOf<String?>(null) }
@@ -678,32 +678,44 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
                 )
             }
             Text(
-                "VOZ E TRANSCRIÇÃO",
+                "DEFINIÇÕES DE VOZ",
                 style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
         PrimaryTabRow(
-            selectedTabIndex = if (showTranscription) 1 else 0,
+            selectedTabIndex = when (selectedTab) {
+                "transcricao" -> 1
+                "elevenlabs" -> 2
+                else -> 0
+            },
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.primary,
         ) {
             Tab(
-                selected = !showTranscription,
+                selected = selectedTab == "leitura",
                 onClick = {
-                    showTranscription = false
+                    selectedTab = "leitura"
                     scope.launch { scrollState.animateScrollTo(0) }
                 },
                 text = { Text("Leitura") },
             )
             Tab(
-                selected = showTranscription,
+                selected = selectedTab == "transcricao",
                 onClick = {
-                    showTranscription = true
+                    selectedTab = "transcricao"
                     scope.launch { scrollState.animateScrollTo(0) }
                 },
                 text = { Text("Transcrição") },
+            )
+            Tab(
+                selected = selectedTab == "elevenlabs",
+                onClick = {
+                    selectedTab = "elevenlabs"
+                    scope.launch { scrollState.animateScrollTo(0) }
+                },
+                text = { Text("ElevenLabs") },
             )
         }
 
@@ -711,7 +723,7 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
             Modifier.weight(1f).verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-        if (!showTranscription) {
+        if (selectedTab == "leitura") {
 
         // -------------------------------------------------------------------
         // Voz em uso e ajustes de leitura
@@ -838,8 +850,6 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
                 )
             }
         }
-
-        ElevenLabsSettingsSection()
 
         // -------------------------------------------------------------------
         // Vozes disponíveis no dispositivo
@@ -1297,7 +1307,9 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
         // -------------------------------------------------------------------
         // SECTION D: TRANSCRIÇÃO DE VOZ (STT)
         // -------------------------------------------------------------------
-        if (showTranscription) SpeechModelManagement(
+        if (selectedTab == "elevenlabs") ElevenLabsSettingsSection()
+
+        if (selectedTab == "transcricao") SpeechModelManagement(
             installedIds = installedSpeechModels,
             selectedId = selectedSpeechModel,
             download = speechDownload,

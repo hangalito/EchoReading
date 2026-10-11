@@ -61,6 +61,7 @@ fun ElevenLabsSettingsSection() {
     val selectedName = remember(revision) { ElevenLabsAuth.selectedVoiceName(context) }
     val maxCharacters = remember(revision) { ElevenLabsAuth.maxCharactersPerReading(context) }
     var voices by remember { mutableStateOf<List<ElevenLabsVoice>>(emptyList()) }
+    var catalogFromAccount by remember { mutableStateOf<Boolean?>(null) }
     var quota by remember { mutableStateOf<ElevenLabsQuota?>(null) }
     var search by rememberSaveable { mutableStateOf("") }
     var loading by remember { mutableStateOf(false) }
@@ -70,7 +71,10 @@ fun ElevenLabsSettingsSection() {
         scope.launch {
             loading = true
             error = null
-            ElevenLabsMcp.voices(context, query).onSuccess { voices = it }.onFailure {
+            ElevenLabsMcp.voices(context, query).onSuccess {
+                voices = it.voices
+                catalogFromAccount = it.fromAccount
+            }.onFailure {
                 error = it.message ?: "Não foi possível carregar as vozes."
             }
             loading = false
@@ -83,6 +87,7 @@ fun ElevenLabsSettingsSection() {
             quota = ElevenLabsMcp.quota(context).getOrNull()
         } else {
             voices = emptyList()
+            catalogFromAccount = null
             quota = null
         }
     }
@@ -145,6 +150,11 @@ fun ElevenLabsSettingsSection() {
 
             HorizontalDivider()
             Text("Explorar vozes", style = MaterialTheme.typography.titleSmall)
+            if (catalogFromAccount == false) Text(
+                "Vozes padrão ElevenLabs. As vozes da sua conta não estão disponíveis nesta ligação.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             OutlinedTextField(
                 value = search,
                 onValueChange = { search = it },
@@ -159,7 +169,7 @@ fun ElevenLabsSettingsSection() {
             )
             if (loading) CircularProgressIndicator()
             error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-            voices.take(20).forEach { voice ->
+            voices.take(30).forEach { voice ->
                 Row(
                     Modifier.fillMaxWidth().selectable(
                         selected = selectedVoice == voice.id,

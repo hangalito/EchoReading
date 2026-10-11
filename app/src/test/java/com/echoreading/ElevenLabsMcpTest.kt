@@ -22,6 +22,16 @@ class ElevenLabsMcpTest {
     }
 
     @Test
+    fun readsAndFiltersPublicDefaultVoices() {
+        val response = JSONObject("""{"voices":[{"voice_id":"voice-1","name":"Maria - Warm"},{"voice_id":"voice-2","name":"George - Calm"}]}""")
+
+        assertEquals(
+            listOf(ElevenLabsVoice("voice-1", "Maria - Warm")),
+            ElevenLabsMcp.filterVoices(ElevenLabsMcp.parseVoices(response), "mArIa"),
+        )
+    }
+
+    @Test
     fun readsUsageWhenSubscriptionToolExists() {
         val result = JSONObject().put("content", JSONArray().put(JSONObject()
             .put("type", "text")
