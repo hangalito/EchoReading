@@ -57,4 +57,15 @@ class ElevenLabsMcpTest {
 
         assertEquals("Voice is unavailable for this account", ElevenLabsMcp.toolError(result))
     }
+
+    @Test
+    fun rejectsSpeechToolWhoseSchemaCannotAcceptText() {
+        val broken = JSONObject().put("inputSchema", JSONObject().put("properties", JSONObject()
+            .put("voice_id", JSONObject())))
+        val usable = JSONObject().put("inputSchema", JSONObject().put("properties", JSONObject()
+            .put("text", JSONObject()).put("voice_id", JSONObject())))
+
+        assertEquals(false, ElevenLabsMcp.supportsSpeechTool(broken))
+        assertEquals(true, ElevenLabsMcp.supportsSpeechTool(usable))
+    }
 }

@@ -77,32 +77,72 @@ object ElevenLabsMcp {
 
     suspend fun openReader(context: Context, voiceId: String, speed: Float): Reader = withContext(Dispatchers.IO) {
         val session = connect(context)
-        val tool = session.tool("text_to_speech", "generate_speech", "convert_text_to_speech")
-            ?: error("A geração de voz não está disponível nesta ligação ElevenLabs.")
-        val voiceParameter = when {
-            session.accepts(tool, "voice_id") -> "voice_id"
-            session.accepts(tool, "voiceId") -> "voiceId"
-            else -> error("Esta ferramenta ElevenLabs não aceita seleção de voz.")
-        }
+        val tool = session.speechTool()
         Reader { text, output ->
             withContext(Dispatchers.IO) {
-                val arguments = JSONObject().put("text", text).put(voiceParameter, voiceId)
-                if (session.accepts(tool, "model_id")) arguments.put("model_id", "eleven_multilingual_v2")
-                if (session.accepts(tool, "output_format")) arguments.put("output_format", "mp3_44100_128")
-                if (session.accepts(tool, "speed")) arguments.put("speed", speed.coerceIn(0.7f, 1.2f).toDouble())
-                val result = session.call(tool, arguments)
-                val downloadUrl = findAudioUrl(result)
-                    ?: error("A ElevenLabs não devolveu um ficheiro de áudio.")
-                download(downloadUrl, output)
-                MediaMetadataRetriever().use { retriever ->
-                    retriever.setDataSource(output.absolutePath)
-                    val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-                        ?.toLongOrNull() ?: 0L
-                    if (duration <= 0L) throw IOException("Duração de áudio inválida.")
-                    duration
+                if (tool == null) {
+                    val token = ElevenLabsAuth.accessToken(context)
+                        ?: error("A sessão ElevenLabs expirou. Inicie sessão novamente.")
+                    directSpeech(token, voiceId, text, output)
+                } else {
+                    val voiceParameter = when {
+                        session.accepts(tool, "voice_id") -> "voice_id"
+                        session.accepts(tool, "voiceId") -> "voiceId"
+                        else -> "voice_name"
+                    }
+                    val voice = if (voiceParameter == "voice_name") {
+                        ElevenLabsAuth.selectedVoiceName(context)
+                            ?: error("Nome da voz ElevenLabs em falta.")
+                    } else voiceId
+                    val arguments = JSONObject().put("text", text).put(voiceParameter, voice)
+                    if (session.accepts(tool, "model_id")) arguments.put("model_id", "eleven_multilingual_v2")
+                    if (session.accepts(tool, "output_format")) arguments.put("output_format", "mp3_44100_128")
+                    if (session.accepts(tool, "speed")) arguments.put("speed", speed.coerceIn(0.7f, 1.2f).toDouble())
+                    val result = session.call(tool, arguments)
+                    val downloadUrl = findAudioUrl(result)
+                        ?: error("A ElevenLabs não devolveu um ficheiro de áudio.")
+                    download(downloadUrl, output)
+                    audioDuration(output)
                 }
             }
         }
+    }
+
+    private suspend fun directSpeech(token: String, voiceId: String, text: String, output: File): Long {
+        require(voiceId.matches(Regex("[A-Za-z0-9_-]{1,128}"))) { "Identificador de voz inválido." }
+        val connection = URL("https://api.us.elevenlabs.io/v1/text-to-speech/$voiceId?output_format=mp3_44100_128")
+            .openConnection() as HttpURLConnection
+        try {
+            connection.requestMethod = "POST"
+            connection.instanceFollowRedirects = false
+            connection.connectTimeout = 20_000
+            connection.readTimeout = 60_000
+            connection.doOutput = true
+            connection.setRequestProperty("Authorization", "Bearer $token")
+            connection.setRequestProperty("Content-Type", "application/json")
+            connection.setRequestProperty("Accept", "audio/mpeg")
+            val body = JSONObject().put("text", text).put("model_id", "eleven_multilingual_v2")
+            connection.outputStream.use { it.write(body.toString().toByteArray(Charsets.UTF_8)) }
+            if (connection.responseCode !in 200..299) {
+                val detail = connection.errorStream?.bufferedReader()?.use { it.readText().take(2048) }.orEmpty()
+                val message = runCatching {
+                    JSONObject(detail).optJSONObject("detail")?.optString("message")
+                }.getOrNull()?.takeIf { it.isNotBlank() } ?: "Pedido recusado."
+                throw IOException("ElevenLabs HTTP ${connection.responseCode}: $message")
+            }
+            writeAudio(connection, output)
+            return audioDuration(output)
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    private fun audioDuration(output: File): Long = MediaMetadataRetriever().use { retriever ->
+        retriever.setDataSource(output.absolutePath)
+        val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+            ?.toLongOrNull() ?: 0L
+        if (duration <= 0L) throw IOException("Duração de áudio inválida.")
+        duration
     }
 
     private suspend fun connect(context: Context): Session {
@@ -151,6 +191,11 @@ object ElevenLabsMcp {
 
         fun accepts(tool: String, parameter: String): Boolean =
             tools[tool]?.optJSONObject("inputSchema")?.optJSONObject("properties")?.has(parameter) == true
+
+        fun speechTool(): String? = listOf("generate_speech", "convert_text_to_speech", "text_to_speech")
+            .firstNotNullOfOrNull { name ->
+                tool(name)?.takeIf { candidate -> supportsSpeechTool(tools.getValue(candidate)) }
+            }
 
         fun call(name: String, arguments: JSONObject): JSONObject {
             val response = request("tools/call", JSONObject().put("name", name).put("arguments", arguments))
@@ -204,6 +249,12 @@ object ElevenLabsMcp {
             val error = response.optJSONObject("error") ?: return response
             throw IOException("ElevenLabs MCP: ${error.optString("message", "Erro desconhecido").take(160)}")
         }
+    }
+
+    internal fun supportsSpeechTool(tool: JSONObject): Boolean {
+        val properties = tool.optJSONObject("inputSchema")?.optJSONObject("properties") ?: return false
+        return properties.has("text") && listOf("voice_id", "voiceId", "voice_name")
+            .any(properties::has)
     }
 
     internal fun toolError(result: JSONObject): String? {
@@ -274,11 +325,19 @@ object ElevenLabsMcp {
 
     private suspend fun download(url: String, output: File) {
         val connection = URL(url).openConnection() as HttpURLConnection
-        var complete = false
         try {
             connection.connectTimeout = 20_000
             connection.readTimeout = 60_000
             if (connection.responseCode !in 200..299) throw IOException("Áudio HTTP ${connection.responseCode}")
+            writeAudio(connection, output)
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    private suspend fun writeAudio(connection: HttpURLConnection, output: File) {
+        var complete = false
+        try {
             val contentType = connection.contentType.orEmpty().lowercase()
             if (!contentType.startsWith("audio/") && !contentType.startsWith("application/octet-stream")) {
                 throw IOException("Resposta sem áudio.")
@@ -301,7 +360,6 @@ object ElevenLabsMcp {
             if (output.length() == 0L) throw IOException("Áudio vazio.")
             complete = true
         } finally {
-            connection.disconnect()
             if (!complete) output.delete()
         }
     }
