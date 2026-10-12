@@ -32,7 +32,6 @@ import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.Forward10
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Replay10
 import androidx.compose.material.icons.filled.Schedule
@@ -145,9 +144,6 @@ fun ReaderHome() {
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            // Status bar & Quick Voice Pill
-            StitchStatusVoiceBar(snapshot = snapshot, enabled = editable)
-
             // Primary Input Card (Material 3 Elevated Container from Stitch)
             Card(
                 modifier = Modifier
@@ -324,6 +320,8 @@ fun ReaderHome() {
                     }
                 }
             }
+
+            StitchStatusVoiceBar(snapshot = snapshot, enabled = editable, showSpeed = true)
 
             // Reprodutor de Voz Card (Bordered M3 Card from Stitch)
             Card(
@@ -651,124 +649,6 @@ fun ReaderHome() {
                                     )
                                 }
                             }
-                        }
-                    }
-                }
-            }
-
-            // Quick Tuning Card: Speed Pills & Voice Info
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                ),
-            ) {
-                Column(
-                    Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            "Velocidade da Fala",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Surface(
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)
-                        ) {
-                            Text(
-                                "${
-                                    String.format(
-                                        Locale.US,
-                                        "%.1f",
-                                        snapshot.speed
-                                    )
-                                }x ${if (snapshot.speed == 1.0f) "(Padrão)" else ""}",
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
-
-                    // 5 speed pills in a row spanning full width
-                    val speeds = listOf(0.75f, 1.0f, 1.25f, 1.5f, 2.0f)
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        speeds.forEach { s ->
-                            val isSelected = snapshot.speed == s
-                            Surface(
-                                shape = CircleShape,
-                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainer,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(34.dp)
-                                    .clickable(enabled = editable) {
-                                        ReaderState.snapshot.value =
-                                            ReaderState.snapshot.value.copy(speed = s)
-                                        ReaderState.save(context)
-                                    }
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Text(
-                                        "${s}x",
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                                        ),
-                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    // Voice Synthetic Info Row
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(top = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.RecordVoiceOver,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Text(
-                                "Voz Sintética",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Box(
-                                Modifier
-                                    .size(6.dp)
-                                    .background(MaterialTheme.colorScheme.tertiary, CircleShape)
-                            )
-                            Text(
-                                "Natural HD (Neural)",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
                         }
                     }
                 }

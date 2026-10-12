@@ -47,6 +47,7 @@ import com.echoreading.voice.ElevenLabsAuth
 import com.echoreading.voice.ElevenLabsMcp
 import com.echoreading.voice.ElevenLabsQuota
 import com.echoreading.voice.ElevenLabsVoice
+import com.echoreading.voice.NetworkAccess
 import kotlinx.coroutines.launch
 
 @Composable
@@ -69,20 +70,31 @@ fun ElevenLabsSettingsSection() {
 
     fun loadVoices(query: String = "") {
         scope.launch {
+            if (!NetworkAccess.isAvailable(context)) {
+                voices = emptyList()
+                error = null
+                loading = false
+                return@launch
+            }
             loading = true
             error = null
             ElevenLabsMcp.voices(context, query).onSuccess {
                 voices = it.voices
                 catalogFromAccount = it.fromAccount
+                if (query.isBlank() && selectedVoice != null &&
+                    it.voices.none { voice -> voice.id == selectedVoice }
+                ) ElevenLabsAuth.setUseForReading(context, false)
             }.onFailure {
-                error = it.message ?: "Não foi possível carregar as vozes."
+                voices = emptyList()
+                error = if (NetworkAccess.isConnectionFailure(it) || !NetworkAccess.isAvailable(context))
+                    null else "Não foi possível atualizar as vozes."
             }
             loading = false
         }
     }
 
     LaunchedEffect(enabled, connected) {
-        if (connected) {
+        if (connected && NetworkAccess.isAvailable(context)) {
             loadVoices()
             quota = ElevenLabsMcp.quota(context).getOrNull()
         } else {
@@ -150,8 +162,8 @@ fun ElevenLabsSettingsSection() {
 
             HorizontalDivider()
             Text("Explorar vozes", style = MaterialTheme.typography.titleSmall)
-            if (catalogFromAccount == false) Text(
-                "Vozes padrão ElevenLabs. As vozes da sua conta não estão disponíveis nesta ligação.",
+            if (catalogFromAccount == false && NetworkAccess.isAvailable(context)) Text(
+                "A mostrar vozes padrão disponíveis para esta conta.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -182,7 +194,7 @@ fun ElevenLabsSettingsSection() {
                     Text(voice.name, style = MaterialTheme.typography.bodyMedium)
                 }
             }
-            if (!loading && voices.isEmpty() && error == null) {
+            if (!loading && voices.isEmpty() && error == null && NetworkAccess.isAvailable(context)) {
                 Text("Sem vozes para mostrar.", style = MaterialTheme.typography.bodySmall)
             }
 

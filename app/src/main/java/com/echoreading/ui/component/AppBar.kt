@@ -2,15 +2,20 @@ package com.echoreading.ui.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -20,17 +25,23 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -38,7 +49,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -47,6 +57,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -58,8 +69,9 @@ import com.echoreading.voice.OfflineVoice
 import com.echoreading.voice.ElevenLabsAuth
 import com.echoreading.voice.ElevenLabsMcp
 import com.echoreading.voice.ElevenLabsVoice
+import com.echoreading.voice.NetworkAccess
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.Locale
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -179,176 +191,193 @@ fun EchoReadingBottomAppBar(
 }
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 fun StitchStatusVoiceBar(
     snapshot: ReaderSnapshot,
     enabled: Boolean,
     modifier: Modifier = Modifier,
+    showSpeed: Boolean = false,
 ) {
-    val ctx = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    var expanded by rememberSaveable { mutableStateOf(false) }
-    var downloading by remember { mutableStateOf<String?>(null) }
-    var progress by remember { mutableFloatStateOf(0f) }
-    val providerRevision by ElevenLabsAuth.revision.collectAsState()
-    val onlineAvailable = remember(providerRevision) {
-        ElevenLabsAuth.isEnabled(ctx) && ElevenLabsAuth.isConnected(ctx)
-    }
-    val onlineReading = remember(providerRevision) { ElevenLabsAuth.useForReading(ctx) }
-    val onlineVoiceId = remember(providerRevision) { ElevenLabsAuth.selectedVoiceId(ctx) }
-    val onlineVoiceName = remember(providerRevision) { ElevenLabsAuth.selectedVoiceName(ctx) }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val revision by ElevenLabsAuth.revision.collectAsState()
+    var sheetOpen by remember { mutableStateOf(false) }
+    var source by rememberSaveable { mutableStateOf("local") }
+    var search by rememberSaveable { mutableStateOf("") }
     var onlineVoices by remember { mutableStateOf<List<ElevenLabsVoice>>(emptyList()) }
     var onlineLoading by remember { mutableStateOf(false) }
-    var onlineError by remember { mutableStateOf<String?>(null) }
+    var downloading by remember { mutableStateOf<String?>(null) }
+    val accountReady = remember(revision) {
+        ElevenLabsAuth.isEnabled(context) && ElevenLabsAuth.isConnected(context)
+    }
+    val networkAvailable = NetworkAccess.isAvailable(context)
+    val onlineAvailable = accountReady && networkAvailable
+    val onlineReading = remember(revision) { ElevenLabsAuth.useForReading(context) } && networkAvailable
+    val onlineVoiceId = remember(revision) { ElevenLabsAuth.selectedVoiceId(context) }
+    val onlineVoiceName = remember(revision) { ElevenLabsAuth.selectedVoiceName(context) }
+    val localVoices = OfflineVoice.allVoices(context)
+    val activeName = if (onlineReading) onlineVoiceName ?: "ElevenLabs"
+        else OfflineVoice.option(context, snapshot.voiceId).label
 
-    LaunchedEffect(expanded, onlineAvailable) {
-        if (expanded && onlineAvailable) {
+    LaunchedEffect(sheetOpen) {
+        if (sheetOpen) {
+            source = if (onlineReading && onlineAvailable) "online" else "local"
+            search = ""
+        }
+    }
+    LaunchedEffect(sheetOpen, source, search, onlineAvailable) {
+        if (sheetOpen && source == "online" && onlineAvailable) {
+            if (search.isNotBlank()) delay(300)
             onlineLoading = true
-            onlineError = null
-            ElevenLabsMcp.voices(ctx).onSuccess { onlineVoices = it.voices }.onFailure {
-                onlineError = it.message ?: "Não foi possível carregar as vozes ElevenLabs."
-            }
+            onlineVoices = emptyList()
+            onlineVoices = ElevenLabsMcp.voices(context, search).getOrNull()?.voices.orEmpty()
             onlineLoading = false
         }
     }
 
-    Row(
-        modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        color = colorScheme.surfaceContainerLow,
     ) {
-        Surface(
-            shape = CircleShape,
-            color = colorScheme.surfaceContainerLow,
-            shadowElevation = 1.dp
-        ) {
-            Row(
-                Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Box(
-                    Modifier
-                        .size(8.dp)
-                        .background(colorScheme.secondary, CircleShape)
-                )
-                Text(
-                    if (onlineReading) "ElevenLabs online" else "Motor TTS offline",
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
-                    color = colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        Box {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("Voz e ritmo", style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold)
             Surface(
-                shape = CircleShape,
-                color = colorScheme.secondaryContainer.copy(alpha = 0.35f),
-                shadowElevation = 1.dp,
-                modifier = Modifier.clickable(enabled = enabled && downloading == null) {
-                    expanded = true
-                }
+                shape = RoundedCornerShape(14.dp),
+                color = colorScheme.surface,
+                modifier = Modifier.fillMaxWidth().clickable(enabled = enabled) { sheetOpen = true },
             ) {
                 Row(
-                    Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Icon(
-                        Icons.Default.GraphicEq,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = colorScheme.secondary
-                    )
-                    val shortName = if (onlineReading) onlineVoiceName ?: "ElevenLabs"
-                    else OfflineVoice.option(ctx, snapshot.voiceId).label.split("·").lastOrNull()
-                        ?.trim() ?: "Tugão"
-                    Text(
-                        "$shortName • ${String.format(Locale.US, "%.1f", snapshot.speed)}x",
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                        color = colorScheme.onSurface
-                    )
-                    Icon(
-                        Icons.Default.ExpandMore,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = colorScheme.onSurfaceVariant
-                    )
+                    Icon(Icons.Default.GraphicEq, contentDescription = null, tint = colorScheme.primary)
+                    Column(Modifier.weight(1f)) {
+                        Text(activeName, style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.SemiBold, maxLines = 1)
+                        Text(if (onlineReading) "ElevenLabs · online" else "No dispositivo · offline",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colorScheme.onSurfaceVariant)
+                    }
+                    Icon(Icons.Default.ExpandMore, contentDescription = "Escolher voz")
                 }
             }
-
-            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                if (onlineAvailable) {
-                    Text("ElevenLabs", modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        style = MaterialTheme.typography.labelSmall, color = colorScheme.onSurfaceVariant)
-                    if (onlineVoiceId != null && onlineVoices.none { it.id == onlineVoiceId }) {
-                        DropdownMenuItem(
-                            text = { Text("ElevenLabs · ${onlineVoiceName ?: "Voz selecionada"}") },
+            if (showSpeed) {
+                Text("Velocidade de leitura", style = MaterialTheme.typography.labelLarge)
+                Row(
+                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    listOf(0.75f, 1.0f, 1.25f, 1.5f, 2.0f).forEach { value ->
+                        FilterChip(
+                            selected = snapshot.speed == value,
                             onClick = {
-                                ElevenLabsAuth.setUseForReading(ctx, true)
-                                expanded = false
+                                ReaderState.snapshot.value = ReaderState.snapshot.value.copy(speed = value)
+                                ReaderState.save(context)
                             },
-                        )
-                    }
-                    if (onlineLoading) CircularProgressIndicator(Modifier.padding(16.dp).size(20.dp))
-                    onlineError?.let { message ->
-                        Text(message, modifier = Modifier.padding(16.dp),
-                            style = MaterialTheme.typography.bodySmall, color = colorScheme.error)
-                    }
-                    onlineVoices.take(30).forEach { voice ->
-                        DropdownMenuItem(
-                            text = { Text("ElevenLabs · ${voice.name}") },
-                            onClick = {
-                                ElevenLabsAuth.selectVoice(ctx, voice.id, voice.name)
-                                ElevenLabsAuth.setUseForReading(ctx, true)
-                                expanded = false
-                            },
+                            enabled = enabled,
+                            label = { Text("${value}x") },
                         )
                     }
                 }
-                Text("No dispositivo", modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    style = MaterialTheme.typography.labelSmall, color = colorScheme.onSurfaceVariant)
-                OfflineVoice.allVoices(ctx).forEach { voice ->
-                    val installed = OfflineVoice.isInstalled(ctx, voice)
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                if (installed) voice.label else "${voice.label} · ${
-                                    stringResource(
-                                        R.string.download_voice
-                                    )
-                                }"
-                            )
-                        },
-                        onClick = {
-                            expanded = false
-                            if (installed) {
-                                ElevenLabsAuth.setUseForReading(ctx, false)
-                                ReaderState.snapshot.value =
-                                    ReaderState.snapshot.value.copy(voiceId = voice.id)
-                                ReaderState.save(ctx)
-                            } else {
-                                downloading = voice.id
-                                coroutineScope.launch {
-                                    try {
-                                        OfflineVoice.install(ctx, voice) { copied, total ->
-                                            if (total > 0) progress = copied.toFloat() / total
+            }
+        }
+    }
+
+    if (sheetOpen) ModalBottomSheet(onDismissRequest = { sheetOpen = false }) {
+        Column(
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text("Escolher voz", style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold)
+            PrimaryTabRow(selectedTabIndex = if (source == "online" && onlineAvailable) 1 else 0) {
+                Tab(selected = source == "local", onClick = { source = "local" },
+                    text = { Text("No dispositivo") })
+                if (onlineAvailable) Tab(selected = source == "online", onClick = { source = "online" },
+                    text = { Text("ElevenLabs") })
+            }
+            OutlinedTextField(
+                value = search,
+                onValueChange = { search = it },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                label = { Text("Pesquisar voz") },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+            )
+            val listHeight = minOf(480.dp, LocalConfiguration.current.screenHeightDp.dp * 0.55f)
+            LazyColumn(Modifier.fillMaxWidth().heightIn(max = listHeight)) {
+                if (source == "local") {
+                    val matches = localVoices.filter {
+                        it.label.contains(search.trim(), ignoreCase = true)
+                    }
+                    items(matches, key = { it.id }) { voice ->
+                        val installed = OfflineVoice.isInstalled(context, voice)
+                        ListItem(
+                            headlineContent = { Text(voice.label, maxLines = 2) },
+                            supportingContent = { Text(if (installed) "Disponível no dispositivo" else "Transferir voz") },
+                            trailingContent = {
+                                if (downloading == voice.id) CircularProgressIndicator(Modifier.size(20.dp))
+                                else if (snapshot.voiceId == voice.id && !onlineReading)
+                                    Icon(Icons.Default.Check, contentDescription = "Selecionada")
+                            },
+                            modifier = Modifier.clickable(enabled = downloading == null) {
+                                if (installed) {
+                                    ElevenLabsAuth.setUseForReading(context, false)
+                                    ReaderState.snapshot.value = ReaderState.snapshot.value.copy(voiceId = voice.id)
+                                    ReaderState.save(context)
+                                    sheetOpen = false
+                                } else {
+                                    downloading = voice.id
+                                    scope.launch {
+                                        try {
+                                            OfflineVoice.install(context, voice) { _, _ -> }
+                                            ElevenLabsAuth.setUseForReading(context, false)
+                                            ReaderState.snapshot.value = ReaderState.snapshot.value.copy(voiceId = voice.id)
+                                            ReaderState.save(context)
+                                            sheetOpen = false
+                                        } catch (_: Exception) {
+                                            // Keep the current voice when the transfer cannot finish.
+                                        } finally {
+                                            downloading = null
                                         }
-                                        ElevenLabsAuth.setUseForReading(ctx, false)
-                                        ReaderState.snapshot.value =
-                                            ReaderState.snapshot.value.copy(voiceId = voice.id)
-                                        ReaderState.save(ctx)
-                                    } catch (_: Exception) {
-                                    } finally {
-                                        downloading = null
                                     }
                                 }
-                            }
-                        },
-                    )
+                            },
+                        )
+                    }
+                    if (matches.isEmpty()) item {
+                        Text("Sem vozes correspondentes.", Modifier.padding(16.dp),
+                            style = MaterialTheme.typography.bodyMedium)
+                    }
+                } else {
+                    if (onlineLoading) item {
+                        CircularProgressIndicator(Modifier.padding(16.dp).size(24.dp))
+                    }
+                    items(onlineVoices, key = { it.id }) { voice ->
+                        ListItem(
+                            headlineContent = { Text(voice.name, maxLines = 2) },
+                            supportingContent = { Text("ElevenLabs · online") },
+                            trailingContent = {
+                                if (onlineVoiceId == voice.id && onlineReading)
+                                    Icon(Icons.Default.Check, contentDescription = "Selecionada")
+                            },
+                            modifier = Modifier.clickable {
+                                ElevenLabsAuth.selectVoice(context, voice.id, voice.name)
+                                ElevenLabsAuth.setUseForReading(context, true)
+                                sheetOpen = false
+                            },
+                        )
+                    }
+                    if (!onlineLoading && onlineVoices.isEmpty()) item {
+                        Text("Sem vozes online disponíveis.", Modifier.padding(16.dp),
+                            style = MaterialTheme.typography.bodyMedium)
+                    }
                 }
             }
+            Spacer(Modifier.size(12.dp))
         }
     }
 }

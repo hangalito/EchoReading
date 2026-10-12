@@ -68,4 +68,30 @@ class ElevenLabsMcpTest {
         assertEquals(false, ElevenLabsMcp.supportsSpeechTool(broken))
         assertEquals(true, ElevenLabsMcp.supportsSpeechTool(usable))
     }
+
+    @Test
+    fun hidesVoicesUnavailableOnFreePlan() {
+        val voices = listOf(
+            ElevenLabsVoice("default", "Default", category = "premade"),
+            ElevenLabsVoice("library", "Library", category = "community"),
+            ElevenLabsVoice("paid", "Paid", category = "premade", availableForTiers = setOf("starter")),
+            ElevenLabsVoice("owned", "My voice", category = "generated", isOwner = true),
+            ElevenLabsVoice("unknown", "No eligibility metadata"),
+        )
+
+        assertEquals(listOf("default", "owned"),
+            ElevenLabsMcp.availableVoices(voices, "free").map { it.id })
+        assertEquals(listOf("default", "library", "paid", "owned", "unknown"),
+            ElevenLabsMcp.availableVoices(voices, "starter").map { it.id })
+    }
+
+    @Test
+    fun readsTierRestrictionsFromVoiceMetadata() {
+        val response = JSONObject("""{"voices":[{"voice_id":"premium","name":"Premium","category":"professional","available_for_tiers":["creator"],"sharing":{"free_users_allowed":false}}]}""")
+        val voice = ElevenLabsMcp.parseVoices(response).single()
+
+        assertEquals(setOf("creator"), voice.availableForTiers)
+        assertEquals(false, voice.freeUsersAllowed)
+        assertEquals(emptyList<ElevenLabsVoice>(), ElevenLabsMcp.availableVoices(listOf(voice), "free"))
+    }
 }

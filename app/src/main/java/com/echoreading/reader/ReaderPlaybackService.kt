@@ -30,6 +30,7 @@ import com.echoreading.R
 import com.echoreading.MainActivity
 import com.echoreading.voice.ElevenLabsAuth
 import com.echoreading.voice.ElevenLabsMcp
+import com.echoreading.voice.NetworkAccess
 import com.echoreading.voice.OfflineVoice
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
@@ -231,7 +232,7 @@ class ReaderPlaybackService : MediaSessionService() {
         }
         getSystemService(NotificationManager::class.java)?.cancel(STATUS_NOTIFICATION_ID)
         val onlineVoiceId = ElevenLabsAuth.selectedVoiceId(this)
-            ?.takeIf { ElevenLabsAuth.useForReading(this) }
+            ?.takeIf { ElevenLabsAuth.useForReading(this) && NetworkAccess.isAvailable(this) }
         if (onlineVoiceId != null &&
             markdown.spokenText.length > ElevenLabsAuth.maxCharactersPerReading(this)
         ) {
@@ -355,7 +356,16 @@ class ReaderPlaybackService : MediaSessionService() {
                 return@launch
             } catch (e: Throwable) {
                 Log.e(TAG, "Audio synthesis failed for chunk in generation $id", e)
-                withContext(Dispatchers.Main) { failReading(id, e.message) }
+                withContext(Dispatchers.Main) {
+                    if (NetworkAccess.isConnectionFailure(e) ||
+                        (onlineVoiceId != null && !NetworkAccess.isAvailable(this@ReaderPlaybackService))) {
+                        if (generationId == id) stopReading()
+                    } else {
+                        failReading(id, if (onlineVoiceId != null)
+                            "Não foi possível usar esta voz ElevenLabs. Escolha outra voz e tente novamente."
+                        else e.message)
+                    }
+                }
             }
         }
     }

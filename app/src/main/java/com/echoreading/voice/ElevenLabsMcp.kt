@@ -13,9 +13,17 @@ import java.io.File
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.URLEncoder
 import java.util.concurrent.atomic.AtomicInteger
 
-data class ElevenLabsVoice(val id: String, val name: String)
+data class ElevenLabsVoice(
+    val id: String,
+    val name: String,
+    val category: String = "",
+    val availableForTiers: Set<String> = emptySet(),
+    val freeUsersAllowed: Boolean? = null,
+    val isOwner: Boolean = false,
+)
 data class ElevenLabsVoiceCatalog(val voices: List<ElevenLabsVoice>, val fromAccount: Boolean)
 data class ElevenLabsQuota(val tier: String, val used: Long, val limit: Long)
 
@@ -30,21 +38,71 @@ object ElevenLabsMcp {
     suspend fun voices(context: Context, search: String = ""): Result<ElevenLabsVoiceCatalog> =
         withContext(Dispatchers.IO) {
             runCatching {
-                val session = connect(context)
-                val tool = session.tool("search_voices", "list_voices", "search_voice_library", "voices_search")
-                if (tool == null) {
-                    ElevenLabsVoiceCatalog(publicVoices(search), fromAccount = false)
+                if (!NetworkAccess.isAvailable(context)) {
+                    return@runCatching ElevenLabsVoiceCatalog(emptyList(), fromAccount = false)
+                }
+                val token = ElevenLabsAuth.accessToken(context)
+                    ?: error("Inicie sessão na ElevenLabs para ver as vozes.")
+                val tier = runCatching { apiGet("/v1/user/subscription", token).optString("tier") }
+                    .getOrNull()?.ifBlank { null } ?: "free"
+                val accountVoices = runCatching { accountVoices(token, search) }.getOrNull()
+                if (accountVoices != null) {
+                    val allowed = availableVoices(accountVoices, tier)
+                    if (allowed.isNotEmpty()) ElevenLabsVoiceCatalog(allowed, fromAccount = true)
+                    else ElevenLabsVoiceCatalog(availableVoices(publicVoices(search), tier), fromAccount = false)
                 } else {
-                    val arguments = JSONObject()
-                    if (search.isNotBlank()) {
-                        val field = listOf("search", "query", "name").firstOrNull { session.accepts(tool, it) }
-                        field?.let { arguments.put(it, search) }
+                    val listed = runCatching {
+                        val session = connect(context)
+                        val tool = session.tool("search_voices", "list_voices", "search_voice_library", "voices_search")
+                            ?: return@runCatching null
+                        val arguments = JSONObject()
+                        if (search.isNotBlank()) {
+                            listOf("search", "query", "name").firstOrNull { session.accepts(tool, it) }
+                                ?.let { arguments.put(it, search) }
+                        }
+                        parseVoices(session.call(tool, arguments))
+                    }.getOrNull()
+                    if (listed != null) {
+                        val allowed = availableVoices(filterVoices(listed, search), tier)
+                        if (allowed.isNotEmpty()) ElevenLabsVoiceCatalog(allowed, fromAccount = true)
+                        else ElevenLabsVoiceCatalog(availableVoices(publicVoices(search), tier), fromAccount = false)
+                    } else {
+                        ElevenLabsVoiceCatalog(availableVoices(publicVoices(search), tier), fromAccount = false)
                     }
-                    val listed = parseVoices(session.call(tool, arguments))
-                    ElevenLabsVoiceCatalog(filterVoices(listed, search), fromAccount = true)
                 }
             }
         }
+
+    private fun accountVoices(token: String, search: String): List<ElevenLabsVoice> {
+        val found = linkedMapOf<String, ElevenLabsVoice>()
+        var pageToken: String? = null
+        repeat(3) {
+            val query = buildString {
+                append("?page_size=100")
+                if (search.isNotBlank()) append("&search=${URLEncoder.encode(search, "UTF-8")}")
+                pageToken?.let { append("&next_page_token=${URLEncoder.encode(it, "UTF-8")}") }
+            }
+            val response = apiGet("/v2/voices$query", token)
+            parseVoices(response).forEach { found[it.id] = it }
+            pageToken = response.optString("next_page_token").takeIf { it.isNotBlank() }
+            if (pageToken == null || !response.optBoolean("has_more")) return found.values.toList()
+        }
+        return found.values.toList()
+    }
+
+    private fun apiGet(path: String, token: String): JSONObject {
+        val connection = URL("https://api.us.elevenlabs.io$path").openConnection() as HttpURLConnection
+        try {
+            connection.instanceFollowRedirects = false
+            connection.connectTimeout = 15_000
+            connection.readTimeout = 20_000
+            connection.setRequestProperty("Authorization", "Bearer $token")
+            if (connection.responseCode !in 200..299) throw IOException("ElevenLabs HTTP ${connection.responseCode}")
+            return JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
+        } finally {
+            connection.disconnect()
+        }
+    }
 
     private fun publicVoices(search: String): List<ElevenLabsVoice> {
         val connection = URL("https://api.elevenlabs.io/v1/voices").openConnection() as HttpURLConnection
@@ -65,8 +123,22 @@ object ElevenLabsMcp {
     internal fun filterVoices(voices: List<ElevenLabsVoice>, search: String): List<ElevenLabsVoice> =
         if (search.isBlank()) voices else voices.filter { it.name.contains(search.trim(), ignoreCase = true) }
 
+    internal fun availableVoices(voices: List<ElevenLabsVoice>, tier: String): List<ElevenLabsVoice> =
+        voices.filter { voice ->
+            val plan = tier.lowercase()
+            val permittedByTier = voice.availableForTiers.isEmpty() || "all" in voice.availableForTiers ||
+                plan in voice.availableForTiers
+            val permittedOnFree = plan != "free" || voice.isOwner ||
+                (voice.category == "premade" && voice.freeUsersAllowed != false)
+            permittedByTier && permittedOnFree
+        }
+
     suspend fun quota(context: Context): Result<ElevenLabsQuota> = withContext(Dispatchers.IO) {
         runCatching {
+            val token = ElevenLabsAuth.accessToken(context)
+                ?: error("Inicie sessão na ElevenLabs para ver os limites.")
+            runCatching { apiGet("/v1/user/subscription", token) }
+                .getOrNull()?.let(::parseQuota)?.let { return@runCatching it }
             val session = connect(context)
             val tool = session.tool("check_subscription", "get_user_subscription", "subscription")
                 ?: error("A ElevenLabs não disponibiliza os limites da conta nesta ligação.")
@@ -275,7 +347,22 @@ object ElevenLabsMcp {
                 is JSONObject -> {
                     val id = value.optString("voice_id").ifBlank { value.optString("id") }
                     val name = value.optString("name")
-                    if (id.isNotBlank() && name.isNotBlank()) found[id] = ElevenLabsVoice(id, name)
+                    if (id.isNotBlank() && name.isNotBlank()) {
+                        val tiers = value.optJSONArray("available_for_tiers")
+                        val allowed = (0 until (tiers?.length() ?: 0)).mapNotNull { index ->
+                            tiers?.optString(index)?.lowercase()?.takeIf(String::isNotBlank)
+                        }.toSet()
+                        val sharing = value.optJSONObject("sharing")
+                        found[id] = ElevenLabsVoice(
+                            id = id,
+                            name = name,
+                            category = value.optString("category").lowercase(),
+                            availableForTiers = allowed,
+                            freeUsersAllowed = sharing?.takeIf { it.has("free_users_allowed") }
+                                ?.optBoolean("free_users_allowed"),
+                            isOwner = value.optBoolean("is_owner"),
+                        )
+                    }
                     value.keys().forEach { visit(value.opt(it), depth + 1) }
                 }
                 is JSONArray -> (0 until value.length()).forEach { visit(value.opt(it), depth + 1) }
