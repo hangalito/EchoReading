@@ -40,8 +40,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -57,6 +55,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
@@ -68,6 +67,7 @@ import com.echoreading.ui.component.AppBottomTipCard
 import com.echoreading.ui.component.AppTextAction
 import com.echoreading.ui.component.AppTextCard
 import com.echoreading.ui.component.AppTextStatPill
+import com.echoreading.ui.component.PlaybackProgressSection
 import com.echoreading.ui.component.SoundWave
 import com.echoreading.reader.MarkdownText
 import com.echoreading.reader.ReaderPlaybackService
@@ -75,10 +75,8 @@ import com.echoreading.reader.ReaderState
 import com.echoreading.reader.ReadingStatus
 import com.echoreading.ui.component.StitchStatusVoiceBar
 import com.echoreading.ui.component.MarkdownVisualTransformation
-import com.echoreading.util.formatTime
 import com.echoreading.util.sendCommand
 import kotlinx.coroutines.delay
-import java.util.Locale
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
@@ -130,6 +128,19 @@ fun ReaderHome() {
     val markdownTransformation = remember(markdown, accent, codeBackground) {
         MarkdownVisualTransformation(markdown, accent, codeBackground)
     }
+    // During playback the card renders the styled text itself instead of a
+    // read-only TextField. That keeps copy/selection, enables independent
+    // scrolling, and lets the card follow the spoken line with context.
+    val playbackText = remember(markdownTransformation, input.text, editable) {
+        if (editable) {
+            null
+        } else {
+            markdownTransformation.filter(AnnotatedString(input.text)).text
+        }
+    }
+    val playbackFollowOffset = remember(markdown, snapshot.characterOffset, editable) {
+        if (editable) null else markdown.originalToVisual(snapshot.characterOffset)
+    }
     val words = remember(markdown.spokenText) {
         if (markdown.spokenText.isBlank()) {
             0
@@ -142,19 +153,13 @@ fun ReaderHome() {
         if (words > 0) (words / (2.5 * snapshot.speed)).toInt() else 0
     }
 
-    LaunchedEffect(snapshot.characterOffset, snapshot.text, snapshot.status) {
+    LaunchedEffect(snapshot.text, editable) {
+        // The card follows snapshot.characterOffset through playbackFollowOffset.
+        // Do not move the TextField selection here: doing so forced the field to
+        // scroll to the current chunk and made manual scrolling during playback
+        // impossible.
         if (!editable && snapshot.text != input.text) {
             input = TextFieldValue(snapshot.text)
-        }
-        if (snapshot.text == input.text) {
-            input = input.copy(
-                selection = TextRange(
-                    snapshot.characterOffset.coerceIn(
-                        0,
-                        input.text.length
-                    )
-                )
-            )
         }
     }
 
@@ -180,6 +185,9 @@ fun ReaderHome() {
                 placeholder = stringResource(R.string.reading_text_placeholder),
                 editable = editable,
                 visualTransformation = markdownTransformation,
+                expandable = true,
+                readOnlyText = playbackText,
+                followOffset = playbackFollowOffset,
                 headerActions = {
                     AppTextAction(
                         icon = Icons.Default.ContentPaste,
@@ -347,83 +355,22 @@ fun ReaderHome() {
                         )
                     }
 
-                    // Progress Bar / Scrubber & Time
-                    val hasDuration = snapshot.durationMs > 0
-                    val progress =
-                        if (hasDuration) (snapshot.positionMs.toFloat() / snapshot.durationMs).coerceIn(
-                            0f,
-                            1f
-                        ) else 0f
-                    var scrubProgress by remember { mutableStateOf<Float?>(null) }
-                    val displayedPosition = scrubProgress?.let {
-                        (it * snapshot.durationMs).toLong()
-                    } ?: snapshot.positionMs
-
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Slider(
-                            value = scrubProgress ?: progress,
-                            onValueChange = { scrubProgress = it.coerceIn(0f, 1f) },
-                            onValueChangeFinished = {
-                                val target = ((scrubProgress ?: progress) * snapshot.durationMs).toLong()
-                                scrubProgress = null
-                                sendCommand(
-                                    context,
-                                    ReaderPlaybackService.ACTION_SEEK,
-                                    positionMs = target,
-                                )
-                            },
-                            enabled = hasDuration,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(16.dp),
-                            colors = SliderDefaults.colors(
-                                thumbColor = MaterialTheme.colorScheme.primary,
-                                activeTrackColor = MaterialTheme.colorScheme.primary,
-                                inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest
+                    // Kept in its own composable: this is the only element that
+                    // is updated at the display refresh rate during playback.
+                    PlaybackProgressSection(
+                        positionMs = snapshot.positionMs,
+                        positionUpdatedAtNanos = snapshot.positionUpdatedAtNanos,
+                        durationMs = snapshot.durationMs,
+                        isPlaying = snapshot.status == ReadingStatus.PLAYING,
+                        speed = snapshot.speed,
+                        onSeek = { target ->
+                            sendCommand(
+                                context,
+                                ReaderPlaybackService.ACTION_SEEK,
+                                positionMs = target,
                             )
-                        )
-
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 2.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Text(
-                                    formatTime(displayedPosition),
-                                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Text(
-                                    "/",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.outline
-                                )
-                                Text(
-                                    formatTime(snapshot.durationMs),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-
-                            Surface(
-                                shape = CircleShape,
-                                color = MaterialTheme.colorScheme.surfaceContainer
-                            ) {
-                                Text(
-                                    "${String.format(Locale.US, "%.1f", snapshot.speed)}x Vel",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                                )
-                            }
-                        }
-                    }
+                        },
+                    )
 
                     // Transport Bar Container (Soft surfaceContainer pill containing all 5 transport controls)
                     Surface(

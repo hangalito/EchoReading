@@ -382,6 +382,124 @@ architecture unless a task explicitly says otherwise.
   `CN=EchoReading Test`) was installed and opened Home and the idle STT screen
   without a fatal exception. The result was rendered from a fake persisted
   snapshot; no real STT model download/transcription was exercised.
+- Commit: `6d54529` (`feat: share reader and transcription text card`).
+
+### R15. Frame-clock playback progress and seek-bar smoothness
+
+- Status: `[~]` (implementation and automated checks complete; final visual
+  confirmation on the physical display is still pending)
+- Files: `app/src/main/java/com/echoreading/ui/component/PlaybackProgressSection.kt`
+  (new), `app/src/main/java/com/echoreading/ui/screen/HomeScreen.kt`,
+  `app/src/main/java/com/echoreading/reader/ReaderState.kt`,
+  `app/src/main/java/com/echoreading/reader/ReaderPlaybackService.kt`,
+  `app/src/test/java/com/echoreading/ui/component/PlaybackProgressSectionTest.kt`
+  (new), `PROJECT.md`, `docs/REMEDIATION.md`
+- Problem: the progress thumb only moved when the service published a 500 ms
+  position sample, so it visibly stepped. A first interpolation attempt used
+  `ReaderSnapshot.speed`, but generated audio already contains the selected
+  synthesis speed and Media3 always plays it at 1x. At 0.75x the bar therefore
+  advanced 25% too slowly and every service correction pulled it forward by
+  about 125 ms; the remaining backward snap came from anchoring the sample at
+  composition time instead of the time the service read the player.
+- Change: extracted the seek bar and time row into `PlaybackProgressSection`,
+  which advances once per display frame with `withFrameNanos`. Interpolation now
+  advances in real time (1x) and is capped at 1 s between authoritative samples.
+  `ReaderSnapshot.positionUpdatedAtNanos` records the service's monotonic sample
+  time, so a late composition does not pull the thumb back by the composition
+  latency. Pause and end publish the exact player position before stopping the
+  ticker; resume refreshes the position before exposing `PLAYING`. Seek, restart,
+  pause and error paths snap instead of extrapolating. Only this component
+  tracks the frame clock; Home and the player card remain on the snapshot
+  cadence.
+- Acceptance: the displayed position advances at wall-clock rate at any refresh
+  rate, stays within 100 ms of the audio, does not step on each 500 ms
+  correction, and stops moving immediately on pause/end. A 22 s test clip and
+  the user's longer texts are the intended manual check.
+- Verification: `:app:testDebugUnitTest :app:lintDebug` passed with 555 tests,
+  0 failures, 0 errors, 1 skipped (31 suites); lint has 0 errors, 92 warnings
+  (93 findings). `PlaybackProgressSectionTest` covers 1x advancement, the 1 s
+  bound, duration clamping, and a missing duration. The signed test release
+  (200,449,017 bytes, SHA-256
+  `4E0FB7645A4248539A6DA16BA5195455B7FD993A2C81B30B516155E741C081AD`,
+  `CN=EchoReading Test`) was installed with `-r`; `firstInstallTime` remained
+  `2026-10-21 12:15:15` and the previous text/voice state was preserved.
+  On the physical 25028RN03A (Android 15/API 35), playback reached
+  `EM LEITURA` and advanced (`00:04 / 00:22`), pause held a stable position
+  (`00:20 / 00:22` across two checks), and a slider tap sought to `00:14`.
+  Device interaction was then interrupted before the full smoothness run, so the
+  final 90 Hz observation is not claimed.
+- Limitation: while this work was verified, `dumpsys SurfaceFlinger` reported
+  `activeMode ... vsyncRate=60.00 Hz`, and the vendor setting
+  `global/unisoc.display_refreshrate=60` matched it. The app does not request or
+  force a display mode; the frame loop follows whatever rate the system
+  provides. A 90 Hz visual run remains unobserved. The user's earlier report of
+  lighter jumps was on the pre-fix build.
+
+### R16. Reader text-card growth, full-screen editing, and playback following
+
+- Status: `[~]` (implementation and emulator checks complete; the user's
+  physical-device check is still pending)
+- Files: `app/src/main/java/com/echoreading/ui/component/AppTextCard.kt`,
+  `app/src/main/java/com/echoreading/ui/screen/HomeScreen.kt`,
+  `app/src/main/res/values/strings.xml`,
+  `app/src/test/java/com/echoreading/ui/component/AppTextCardFollowTest.kt`
+  (new), `PROJECT.md`, `docs/REMEDIATION.md`
+- Problem: the reader text field was a fixed 160 dp `TextField`. While typing,
+  its height never grew; long text scrolled inside a small field. During
+  playback Home repeatedly moved the field selection to
+  `snapshot.characterOffset`, which forced the read-only field back to the
+  current chunk and made manual scrolling impossible. A newly spoken chunk was
+  brought into view with its first line at the bottom edge, hiding the text
+  that followed.
+- Change: the collapsed text surface grows from 160 dp to 200 dp (25%) with its
+  content. `AppTextCard` measures the styled text against the collapsed maximum
+  and shows a down-arrow in the header only when the content overflows. The
+  arrow opens a full-screen dialog with a back action, the existing header
+  actions, statistics footer, safe-area/IME insets, and the same editor or
+  read-only content. Closing via the toolbar or system back returns to the
+  auto-grown maximum, not the initial height. During playback the card renders
+  the markdown-styled text as selectable `Text` with its own `ScrollState`
+  instead of a read-only `TextField`; Home no longer updates the field selection
+  from the snapshot. The card receives the visual current offset and applies
+  `followScrollTarget`: if the spoken line reaches the lower 20% of the
+  viewport, it animates the line to about one third from the top; if the line
+  is already visible or above the viewport (the user is looking ahead), it does
+  not move the view.
+- Acceptance: the collapsed field grows with content up to 25% and exposes the
+  full-screen action only when needed; full-screen editing works and closing
+  restores the auto-grown height; playback text remains selectable, manually
+  scrollable, and follows new chunks with following context visible; scrolling
+  ahead is not undone by the next position update.
+- Verification: `:app:testDebugUnitTest :app:lintDebug` passed with 560 tests,
+  0 failures, 0 errors, 1 skipped (32 suites); lint has 0 errors, 92 warnings
+  (93 findings). The new `AppTextCardFollowTest` covers placement near the
+  bottom, no movement for a visible line, no pull-back when the user is ahead,
+  end clamping, and an empty viewport (5/5 passed).
+  `:app:connectedDebugAndroidTest` passed 4/4 in 22.340 s on the Pixel_6 AVD
+  (`sdk_gphone16k_x86_64`, Android 17/API 37); this is the existing
+  ActivityScenario/UIAutomator smoke suite, not a new text-card UI test.
+  Emulator manual checks used 45-line/6,380-character and 30-line/4,250-
+  character texts with the offline Tugão voice. The idle field grew from
+  160 dp to 200 dp and showed the down-arrow; tapping it opened the full-screen
+  editor; the toolbar back action and system back both restored the 200 dp
+  field. During playback the card rendered as selectable `TextView` content;
+  a manual swipe moved from the followed region to later lines and stayed there
+  after six seconds; a swipe in the opposite direction was also accepted, and
+  the current region remained visible with following lines below it. Opening
+  full screen during
+  playback preserved the read-only mode and showed the current region. No
+  `FATAL EXCEPTION` was observed in logcat. The signed test release
+  (200,498,977 bytes, SHA-256
+  `A225D359797B88C2FE5F944FE20E89B77D12BDEC7871C13897F889A9E7A7A3CF`,
+  `CN=EchoReading Test`) was installed on the same AVD; Home opened, a short
+  share intent rendered a 160 dp field with no expansion arrow, and a 30-line
+  share rendered a 200 dp field with the arrow. The physical 25028RN03A check
+  is intentionally left to the user.
+- Limitation: the emulator is not the physical display; refresh-rate behavior
+  and the final physical scroll feel remain unverified. The auto-follow
+  placement and manual-scroll rules are covered by JVM tests, but the visual
+  animation itself was only inspected on the emulator. The release artifact
+  uses the local test keystore and is not a production-signed build.
 
 ## Verification log
 
@@ -389,6 +507,14 @@ Add newest entries at the top. Include command, result, and which item it covers
 
 | Date | Command | Result | Item |
 |---|---|---|---|
+| 2026-10-21 | `.\gradlew.bat :app:assembleRelease` (test signing env); install on Pixel_6 AVD | `BUILD SUCCESSFUL`; 200,498,977-byte APK, SHA-256 `A225D359...A7A3CF`, `CN=EchoReading Test`; short share gave a 160 dp field with no arrow, 30-line share gave a 200 dp field with the arrow; no `FATAL EXCEPTION` | R16 |
+| 2026-10-21 | `.\gradlew.bat :app:testDebugUnitTest :app:lintDebug` | 560 tests, 0 failures, 0 errors, 1 skipped (32 suites); lint 0 errors, 92 warnings, 93 findings; `AppTextCardFollowTest` 5/5 | R16 |
+| 2026-10-21 | `.\gradlew.bat :app:connectedDebugAndroidTest "-Pandroid.injected.device.serial=emulator-5554"` | `BUILD SUCCESSFUL`; 4 tests, 0 failures, 0 errors, 0 skipped in 22.340 s on Pixel_6 AVD Android 17/API 37 (existing smoke suite) | R16 |
+| 2026-10-21 | Pixel_6 AVD manual: 45-line/6,380-char and 30-line/4,250-char reader texts, offline Tugão | Idle field 160 dp -> 200 dp with down-arrow; full-screen dialog opened via arrow; toolbar/system back restored 200 dp; playback read-only text accepted manual swipes and stayed put after 6 s; full-screen playback kept read-only; no `FATAL EXCEPTION`; physical check pending | R16 |
+| 2026-10-21 | `.\gradlew.bat :app:testDebugUnitTest :app:lintDebug` | 555 tests, 0 failures, 0 errors, 1 skipped (31 suites); lint 0 errors, 92 warnings, 93 findings | R15 |
+| 2026-10-21 | `.\gradlew.bat :app:assembleRelease` (test signing env); `adb install -r` | `BUILD SUCCESSFUL`; 200,449,017-byte APK, SHA-256 `4E0FB764...C081AD`; installed over the previous release; `firstInstallTime` and text/voice state preserved | R15 |
+| 2026-10-21 | Physical 25028RN03A: signed R15 release, 22 s Tugão offline clip | `EM LEITURA` and progress advanced to `00:04`; pause held `00:20` across two checks; slider tap sought to `00:14`; full smoothness run and 90 Hz observation pending after device interaction was interrupted | R15 |
+| 2026-10-21 | `adb shell dumpsys SurfaceFlinger`; `adb shell settings list global` | `activeMode ... vsyncRate=60.00 Hz`; `unisoc.display_refreshrate=60`; no app-forced display mode | R15 |
 | 2026-10-21 | `.\gradlew.bat :app:testDebugUnitTest :app:lintDebug` | 552 tests, 0 failures, 0 errors, 1 skipped (30 suites); lint 0 errors, 92 warnings, 1 hint | R1-R8, R11-R14 |
 | 2026-10-21 | Physical 25028RN03A: launch signed release 2.2.0, open Transcrever | Home and idle STT rendered; no `FATAL EXCEPTION`; real model download/transcription not exercised | R14 |
 | 2026-10-21 | `.\gradlew.bat :app:assembleRelease` (test signing env); `apksigner verify --print-certs` | `BUILD SUCCESSFUL`; signed APK 200,449,017 bytes; cert `CN=EchoReading Test`; installed and launched on the physical device | R10, R14 |
@@ -427,11 +553,16 @@ model-dependent tests now execute instead of being skipped.
 
 1. Read this file and `AGENTS.md`.
 2. Run `git status --short` and inspect the current diff before touching files.
-3. R1-R14 are complete. No in-repo remediation item is open. Remaining release
-   steps are external: production keystore/signing, Play submission and
-   target-API policy check, and vendoring or checksum-verifying the pinned
-   JitPack Sherpa AAR. Optional follow-ups: an automated history-DB failure test
-   and a Macrobenchmark frame-timing test.
+3. R1-R14 are complete and committed (`caf55bb` through `6d54529`). R15 is
+   implemented and installed, but remains `[~]` until the progress bar is
+   watched on the physical display at the actual refresh rate and the remaining
+   seek/pause/resume paths are rechecked. R16 is implemented and checked on the
+   Pixel_6 AVD, but remains `[~]` until the user checks text growth, the
+   full-screen return height, and playback scrolling on the physical device.
+   Remaining release steps are external: production keystore/signing, Play
+   submission and target-API policy check, and vendoring or
+   checksum-verifying the pinned JitPack Sherpa AAR. Optional follow-ups: an
+   automated history-DB failure test and a Macrobenchmark frame-timing test.
 4. Build with `.\gradlew.bat :app:testDebugUnitTest --console=plain`.
 5. For device changes run `.\gradlew.bat :app:connectedDebugAndroidTest`
    with the Pixel_6 API 37 emulator booted.
@@ -455,5 +586,6 @@ model-dependent tests now execute instead of being skipped.
 - The local machine is Windows; use `.\gradlew.bat`.
 - A full clean build can take several minutes; keep several GB free for APKs
   and reports.
-- R1-R13 were committed in `caf55bb`; the R14 visual changes (including this
-  documentation) remain uncommitted on `dev`.
+- R1-R14 were committed through `6d54529`. The R15 progress/seek-bar and R16
+  text-card changes are committed on `dev`; do not commit further changes unless
+  the user asks.

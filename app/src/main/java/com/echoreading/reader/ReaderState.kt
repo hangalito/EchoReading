@@ -19,6 +19,12 @@ data class ReaderSnapshot(
     val voiceId: String = "pt-PT",
     val speed: Float = 1f,
     val error: String? = null,
+    /**
+     * Monotonic timestamp of [positionMs], in nanoseconds. The UI uses it to
+     * anchor frame-clock interpolation without assuming that composition
+     * happens at the exact moment the service sampled the player.
+     */
+    val positionUpdatedAtNanos: Long = 0L,
 )
 
 object ReaderState {
@@ -66,6 +72,7 @@ object ReaderState {
             durationMs = 0L,
             characterOffset = 0,
             error = null,
+            positionUpdatedAtNanos = System.nanoTime(),
         )
 
         try {

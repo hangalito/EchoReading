@@ -29,6 +29,8 @@
     <!-- Home screen enhancements -->
     <string name="reading_text_title">Texto de Leitura</string>
     <string name="reading_text_placeholder">Escreva ou cole o seu texto aqui…</string>
+    <string name="reading_text_expand">Expandir texto</string>
+    <string name="reading_text_back">Voltar</string>
     <string name="text_stats_format">%1$d palavras • %2$d caracteres</string>
     <string name="paste_text">Colar</string>
     <string name="clear_text">Limpar</string>

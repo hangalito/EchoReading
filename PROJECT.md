@@ -23,6 +23,23 @@ Android 13 (API 33) or newer.
   `MediaSession`. It synthesizes text in chunks, supports seek, ±10 seconds,
   restart, pause/resume, media-notification controls, and active speed/voice
   changes. `util/ComandUtils.kt` is the typed command-entry helper.
+- **Playback progress**: `ui/component/PlaybackProgressSection.kt` owns the seek
+  bar and time row. The service publishes an authoritative position every
+  500 ms with `ReaderSnapshot.positionUpdatedAtNanos`; the component re-anchors
+  to that monotonic timestamp and advances with `withFrameNanos`, so it follows
+  the display clock (60/90/120 Hz) without stepping. Generated audio already
+  contains the selected synthesis speed and Media3 plays it at 1x, so
+  interpolation must not apply `snapshot.speed` again. Pause, seek, restart, and
+  end snap to the supplied position instead of extrapolating.
+- **Reader text card**: `AppTextCard` grows its collapsed field with the text
+  from 160 dp to 200 dp. When the content exceeds that limit, a down-arrow in
+  the header opens a full-screen editor/dialog; closing it returns to the
+  auto-grown height. During playback the card renders the styled text through
+  its own selectable `ScrollState` instead of a read-only `TextField`. Home
+  passes the current chunk as a visual character offset; the card follows it
+  only when the spoken line reaches the lower viewport margin, placing it about
+  one third from the top so following text stays visible. If the user scrolls
+  ahead, the card does not pull the view back.
 - **Text-to-speech**: `voice/OfflineVoice.kt` manages bundled and downloaded Piper
   VITS models through Sherpa-ONNX. The Portuguese (Portugal) Tugão voice is the
   bundled/default model; Portuguese (Brazil) and English (US) models are optional
@@ -60,6 +77,12 @@ Android 13 (API 33) or newer.
 ## State and interface contracts
 
 - `ReaderState.snapshot` exposes reader status and progress to Compose.
+  `positionUpdatedAtNanos` is the monotonic sample time for `positionMs` and is
+  set on every service position write, including pause/resume and seek.
+- `ReaderSnapshot.characterOffset` is a source-text offset at the start of the
+  current synthesis chunk. Home remaps it with
+  `MarkdownDocument.originalToVisual()` before passing it to `AppTextCard`;
+  during playback Home must not drive the text field selection from it.
 - `ReaderState.loadText(context, text)` stops playback, resets the session, writes
   the draft, and emits `loadTextEvent`.
 - `ReaderState.setSpeed/setVoice/refreshVoice` update state and notify an active
@@ -82,7 +105,8 @@ Android 13 (API 33) or newer.
 - `app/src/main/java/com/echoreading/ui/screen/`: reader Home and speech-to-text
   screens.
 - `app/src/main/java/com/echoreading/ui/component/`: app bar/voice picker,
-  shared reader/transcription text card (`AppTextCard`), audio card, Quick Read
+  shared reader/transcription text card (`AppTextCard`), audio card,
+  frame-clock playback progress row (`PlaybackProgressSection`), Quick Read
   popup, and shared UI.
 - `app/src/main/java/com/echoreading/reader/`: reader state, playback service,
   history, chunks, audio cache, and WAV writing.

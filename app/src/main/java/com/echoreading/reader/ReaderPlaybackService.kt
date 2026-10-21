@@ -86,9 +86,18 @@ class ReaderPlaybackService : MediaSessionService() {
             addListener(object : Player.Listener {
                 override fun onIsPlayingChanged(isPlaying: Boolean) {
                     if (isPlaying) {
+                        // Refresh the position and its monotonic timestamp
+                        // before exposing PLAYING. Otherwise the UI can briefly
+                        // extrapolate the old pause sample across the whole
+                        // paused interval and jump forward on resume.
+                        updatePosition()
                         updateStatus(ReadingStatus.PLAYING)
                         startPositionTicker()
                     } else {
+                        // Publish the exact pause/end position before the
+                        // service ticker stops, so the UI does not snap back
+                        // to a sample that can be up to 500 ms old.
+                        updatePosition()
                         stopPositionTicker()
                         if (ReaderState.snapshot.value.status == ReadingStatus.PLAYING) {
                             updateStatus(ReadingStatus.PAUSED)
@@ -297,6 +306,7 @@ class ReaderPlaybackService : MediaSessionService() {
             durationMs = 0,
             voiceId = voiceId,
             speed = speed,
+            positionUpdatedAtNanos = System.nanoTime(),
         )
         ReaderState.save(this)
         val destination = audioDir ?: return
@@ -437,6 +447,7 @@ class ReaderPlaybackService : MediaSessionService() {
             characterOffset = chunks.getOrNull(initialItem)?.start ?: 0,
             voiceId = cached.voiceId,
             speed = cached.speed,
+            positionUpdatedAtNanos = System.nanoTime(),
         )
         ReaderState.save(this)
 
@@ -525,6 +536,7 @@ class ReaderPlaybackService : MediaSessionService() {
             positionMs = effectivePosition,
             voiceId = voiceId,
             speed = speed,
+            positionUpdatedAtNanos = System.nanoTime(),
         )
         ReaderState.save(this)
         when (current.status) {
@@ -563,6 +575,7 @@ class ReaderPlaybackService : MediaSessionService() {
         ReaderState.snapshot.value = ReaderState.snapshot.value.copy(
             status = ReadingStatus.PAUSED,
             durationMs = 0,
+            positionUpdatedAtNanos = System.nanoTime(),
         )
         ReaderState.save(this)
         stopForeground(STOP_FOREGROUND_REMOVE)
@@ -581,7 +594,10 @@ class ReaderPlaybackService : MediaSessionService() {
         val target = positionMs.coerceAtLeast(0)
         if (timeline.size == 0) {
             if (generation != null) pendingPosition = target
-            ReaderState.snapshot.value = ReaderState.snapshot.value.copy(positionMs = target)
+            ReaderState.snapshot.value = ReaderState.snapshot.value.copy(
+                positionMs = target,
+                positionUpdatedAtNanos = System.nanoTime(),
+            )
             ReaderState.save(this)
             return
         }
@@ -608,6 +624,7 @@ class ReaderPlaybackService : MediaSessionService() {
             status = ReadingStatus.PAUSED,
             positionMs = 0,
             characterOffset = 0,
+            positionUpdatedAtNanos = System.nanoTime(),
         )
         ReaderState.save(this)
     }
@@ -619,6 +636,7 @@ class ReaderPlaybackService : MediaSessionService() {
         ReaderState.snapshot.value = ReaderState.snapshot.value.copy(
             positionMs = positionMs,
             characterOffset = chunks.getOrNull(item)?.start ?: 0,
+            positionUpdatedAtNanos = System.nanoTime(),
         )
     }
 
@@ -644,9 +662,11 @@ class ReaderPlaybackService : MediaSessionService() {
     private fun updatePosition() {
         if (ReaderState.epoch != activeEpoch || timeline.size == 0) return
         val index = player.currentMediaItemIndex
+        val position = currentPosition()
         ReaderState.snapshot.value = ReaderState.snapshot.value.copy(
-            positionMs = currentPosition(),
+            positionMs = position,
             characterOffset = chunks.getOrNull(index)?.start ?: 0,
+            positionUpdatedAtNanos = System.nanoTime(),
         )
     }
 
@@ -693,6 +713,7 @@ class ReaderPlaybackService : MediaSessionService() {
                 status = ReadingStatus.IDLE,
                 positionMs = position,
                 characterOffset = if (atEnd) 0 else currentSnapshot.characterOffset,
+                positionUpdatedAtNanos = System.nanoTime(),
             )
             ReaderState.save(this)
         }
