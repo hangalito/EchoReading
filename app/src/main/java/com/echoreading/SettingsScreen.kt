@@ -80,10 +80,9 @@ import androidx.compose.material3.Tab
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -96,6 +95,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -108,6 +108,9 @@ import com.echoreading.reader.WavFiles
 import com.echoreading.ui.component.ElevenLabsSettingsSection
 import com.echoreading.voice.OfflineVoice
 import com.echoreading.voice.ElevenLabsAuth
+import com.echoreading.voice.VoiceDownloadManager
+import com.echoreading.voice.VoiceDownloadSource
+import com.echoreading.voice.VoiceDownloadStatus
 import com.echoreading.voice.VoiceOption
 import com.echoreading.speech.OfflineSpeech
 import com.echoreading.speech.ModelDownloadSnapshot
@@ -115,7 +118,6 @@ import com.echoreading.speech.ModelDownloadStatus
 import com.echoreading.speech.SpeechModelOption
 import com.echoreading.speech.SpeechToTextState
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -154,15 +156,11 @@ private fun SettingsMainMenu(onNavigate: (String) -> Unit) {
     val context = LocalContext.current
     val installedCount = OfflineVoice.allVoices(context).count { OfflineVoice.isInstalled(context, it) }
 
-    val voiceBytes = remember {
-        File(context.noBackupFilesDir, "voices").walkTopDown().filter { it.isFile }.sumOf { it.length() }
+    var stats by remember { mutableStateOf(StorageStats()) }
+    LaunchedEffect(context) {
+        stats = loadStorageStats(context)
     }
-    val speechBytes = remember { OfflineSpeech.getModelSizeBytes(context) }
-    val cacheBytes = remember {
-        context.cacheDir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
-    }
-    val historyBytes = remember { ReadingHistory.sizeBytes(context) }
-    val totalMb = (voiceBytes + speechBytes + cacheBytes + historyBytes) / (1024f * 1024f)
+    val totalMb = stats.totalBytes / (1024f * 1024f)
     val speechInstalled = remember { OfflineSpeech.isModelInstalled(context) }
 
     Column(
@@ -241,7 +239,7 @@ private fun SettingsMainMenu(onNavigate: (String) -> Unit) {
                 )
                 Column {
                     Text(
-                        "Eco Leitura Motor v2.4 (Material 3)",
+                        "Eco Leitura Motor v2.2.0 (Material 3)",
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Medium),
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -566,6 +564,7 @@ private fun SettingsTheme(onBack: () -> Unit) {
 @Composable
 private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val snapshot by ReaderState.snapshot.collectAsState()
     val scope = rememberCoroutineScope()
     val elevenLabsRevision by ElevenLabsAuth.revision.collectAsState()
@@ -573,10 +572,7 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
     var selectedTab by rememberSaveable { mutableStateOf("leitura") }
     val scrollState = rememberScrollState()
 
-    var downloadingId by remember { mutableStateOf<String?>(null) }
-    var downloadJob by remember { mutableStateOf<Job?>(null) }
-    var downloadProgress by remember { mutableFloatStateOf(0f) }
-    var downloadCopiedMb by remember { mutableFloatStateOf(0f) }
+    val voiceDownload by VoiceDownloadManager.state.collectAsState()
 
     var playingVoiceId by remember { mutableStateOf<String?>(null) }
     var isDemonstratingActive by remember { mutableStateOf(false) }
@@ -599,6 +595,33 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
             activePlayer = null
             playingVoiceId = null
             isDemonstratingActive = false
+        }
+    }
+
+    LaunchedEffect(voiceDownload.requestId, voiceDownload.status) {
+        when (voiceDownload.status) {
+            VoiceDownloadStatus.SUCCESS -> {
+                val voiceId = voiceDownload.key
+                if (!voiceId.isNullOrBlank()) {
+                    ElevenLabsAuth.setUseForReading(context, false)
+                    ReaderState.setVoice(context, voiceId)
+                }
+                Toast.makeText(
+                    context,
+                    "${voiceDownload.label.orEmpty()} pronta a usar!",
+                    Toast.LENGTH_SHORT,
+                ).show()
+                VoiceDownloadManager.acknowledge(voiceDownload.requestId)
+            }
+            VoiceDownloadStatus.ERROR -> {
+                Toast.makeText(
+                    context,
+                    resources.getString(R.string.download_failed),
+                    Toast.LENGTH_SHORT,
+                ).show()
+                VoiceDownloadManager.acknowledge(voiceDownload.requestId)
+            }
+            else -> Unit
         }
     }
 
@@ -802,8 +825,7 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
                             FilterChip(
                                 selected = selected,
                                 onClick = {
-                                    ReaderState.snapshot.value = ReaderState.snapshot.value.copy(speed = s)
-                                    ReaderState.save(context)
+                                    ReaderState.setSpeed(context, s)
                                 },
                                 label = {
                                     Text(
@@ -894,8 +916,7 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
                         .fillMaxWidth()
                         .clickable {
                             ElevenLabsAuth.setUseForReading(context, false)
-                            ReaderState.snapshot.value = ReaderState.snapshot.value.copy(voiceId = voice.id)
-                            ReaderState.save(context)
+                            ReaderState.setVoice(context, voice.id)
                         },
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
@@ -1078,7 +1099,8 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
                 }
 
                 downloadableVoices.forEach { voice ->
-                    val isDownloading = downloadingId == voice.id
+                    val isDownloading = voiceDownload.status == VoiceDownloadStatus.DOWNLOADING &&
+                        voiceDownload.key == voice.id
                     val sizeMb = voice.fileSize / (1024f * 1024f)
 
                     Card(
@@ -1157,31 +1179,14 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
 
                                 if (!isDownloading) {
                                     Button(
+                                        enabled = voiceDownload.status != VoiceDownloadStatus.DOWNLOADING,
                                         onClick = {
-                                            downloadingId = voice.id
-                                            downloadProgress = 0f
-                                            downloadCopiedMb = 0f
-                                            downloadJob = scope.launch {
-                                                try {
-                                                    OfflineVoice.install(context, voice) { copied, total ->
-                                                        if (total > 0) {
-                                                            downloadProgress = copied.toFloat() / total
-                                                            downloadCopiedMb = copied / (1024f * 1024f)
-                                                        }
-                                                    }
-                                                    ElevenLabsAuth.setUseForReading(context, false)
-                                                    ReaderState.snapshot.value = ReaderState.snapshot.value.copy(voiceId = voice.id)
-                                                    ReaderState.save(context)
-                                                    Toast.makeText(context, "${voice.label} pronta a usar!", Toast.LENGTH_SHORT).show()
-                                                } catch (e: Exception) {
-                                                    if (e !is kotlinx.coroutines.CancellationException) {
-                                                        Toast.makeText(context, context.getString(R.string.download_failed), Toast.LENGTH_SHORT).show()
-                                                    }
-                                                } finally {
-                                                    downloadingId = null
-                                                    downloadProgress = 0f
-                                                }
-                                            }
+                                            VoiceDownloadManager.start(
+                                                context = context.applicationContext,
+                                                key = voice.id,
+                                                label = voice.label,
+                                                source = VoiceDownloadSource.LOCAL,
+                                            )
                                         },
                                         shape = CircleShape,
                                         colors = ButtonDefaults.buttonColors(
@@ -1203,16 +1208,19 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
                                 } else {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text(
-                                            "${(downloadProgress * 100).toInt()}%",
+                                            "${(voiceDownload.progress * 100).toInt()}%",
                                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                                             color = MaterialTheme.colorScheme.primary
                                         )
                                         Spacer(Modifier.width(4.dp))
                                         IconButton(
                                             onClick = {
-                                                downloadJob?.cancel()
-                                                downloadingId = null
-                                                downloadProgress = 0f
+                                                VoiceDownloadManager.cancel()
+                                                Toast.makeText(
+                                                    context,
+                                                    "Transferência cancelada",
+                                                    Toast.LENGTH_SHORT,
+                                                ).show()
                                             },
                                             modifier = Modifier.size(32.dp)
                                         ) {
@@ -1229,7 +1237,7 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
 
                             if (isDownloading) {
                                 LinearProgressIndicator(
-                                    progress = { downloadProgress },
+                                    progress = { voiceDownload.progress },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(6.dp)
@@ -1251,7 +1259,7 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
                                     )
                                     Spacer(Modifier.width(8.dp))
                                     Text(
-                                        "${String.format(Locale.US, "%.1f", downloadCopiedMb)} MB / ${String.format(Locale.US, "%.1f", sizeMb)} MB",
+                                        "${String.format(Locale.US, "%.1f", voiceDownload.copiedBytes / (1024f * 1024f))} MB / ${String.format(Locale.US, "%.1f", sizeMb)} MB",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         maxLines = 1
@@ -1286,8 +1294,7 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
                             }
                             OfflineVoice.invalidateDiscoveryCache()
                             if (snapshot.voiceId == voice.id) {
-                                ReaderState.snapshot.value = ReaderState.snapshot.value.copy(voiceId = "pt-PT")
-                                ReaderState.save(context)
+                                ReaderState.setVoice(context, "pt-PT")
                             }
                             voiceToDelete = null
                             Toast.makeText(context, "Voz eliminada", Toast.LENGTH_SHORT).show()
@@ -1503,24 +1510,16 @@ private fun SettingsStorage(onBack: () -> Unit) {
     val snapshot by ReaderState.snapshot.collectAsState()
     val scope = rememberCoroutineScope()
 
-    var voiceBytes by remember {
-        mutableLongStateOf(
-            File(context.noBackupFilesDir, "voices").walkTopDown().filter { it.isFile }.sumOf { it.length() }
-        )
-    }
-    var speechBytes by remember {
-        mutableLongStateOf(OfflineSpeech.getModelSizeBytes(context))
-    }
-    var cacheBytes by remember {
-        mutableLongStateOf(
-            context.cacheDir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
-        )
-    }
-    var historyBytes by remember {
-        mutableLongStateOf(ReadingHistory.sizeBytes(context))
+    var stats by remember { mutableStateOf(StorageStats()) }
+    LaunchedEffect(context) {
+        stats = loadStorageStats(context)
     }
 
-    val totalBytes = voiceBytes + speechBytes + cacheBytes + historyBytes
+    val voiceBytes = stats.voiceBytes
+    val speechBytes = stats.speechBytes
+    val cacheBytes = stats.cacheBytes
+    val historyBytes = stats.historyBytes
+    val totalBytes = stats.totalBytes
     val totalMb = totalBytes / (1024f * 1024f)
     val voiceMb = voiceBytes / (1024f * 1024f)
     val speechMb = speechBytes / (1024f * 1024f)
@@ -1537,10 +1536,9 @@ private fun SettingsStorage(onBack: () -> Unit) {
     var showClearHistoryDialog by remember { mutableStateOf(false) }
 
     fun recalculateSizes() {
-        voiceBytes = File(context.noBackupFilesDir, "voices").walkTopDown().filter { it.isFile }.sumOf { it.length() }
-        speechBytes = OfflineSpeech.getModelSizeBytes(context)
-        cacheBytes = context.cacheDir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
-        historyBytes = ReadingHistory.sizeBytes(context)
+        scope.launch {
+            stats = loadStorageStats(context)
+        }
     }
 
     Column(
@@ -1954,8 +1952,7 @@ private fun SettingsStorage(onBack: () -> Unit) {
                             }
                             OfflineVoice.invalidateDiscoveryCache()
                             if (snapshot.voiceId != "pt-PT") {
-                                ReaderState.snapshot.value = ReaderState.snapshot.value.copy(voiceId = "pt-PT")
-                                ReaderState.save(context)
+                                ReaderState.setVoice(context, "pt-PT")
                             }
                             recalculateSizes()
                             showClearVoicesDialog = false

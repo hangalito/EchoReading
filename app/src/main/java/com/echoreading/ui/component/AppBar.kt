@@ -51,7 +51,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -70,8 +69,10 @@ import com.echoreading.voice.ElevenLabsAuth
 import com.echoreading.voice.ElevenLabsMcp
 import com.echoreading.voice.ElevenLabsVoice
 import com.echoreading.voice.NetworkAccess
+import com.echoreading.voice.VoiceDownloadManager
+import com.echoreading.voice.VoiceDownloadSource
+import com.echoreading.voice.VoiceDownloadStatus
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -199,14 +200,13 @@ fun StitchStatusVoiceBar(
     showSpeed: Boolean = false,
 ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val revision by ElevenLabsAuth.revision.collectAsState()
+    val voiceDownload by VoiceDownloadManager.state.collectAsState()
     var sheetOpen by remember { mutableStateOf(false) }
     var source by rememberSaveable { mutableStateOf("local") }
     var search by rememberSaveable { mutableStateOf("") }
     var onlineVoices by remember { mutableStateOf<List<ElevenLabsVoice>>(emptyList()) }
     var onlineLoading by remember { mutableStateOf(false) }
-    var downloading by remember { mutableStateOf<String?>(null) }
     val accountReady = remember(revision) {
         ElevenLabsAuth.isEnabled(context) && ElevenLabsAuth.isConnected(context)
     }
@@ -232,6 +232,18 @@ fun StitchStatusVoiceBar(
             onlineVoices = emptyList()
             onlineVoices = ElevenLabsMcp.voices(context, search).getOrNull()?.voices.orEmpty()
             onlineLoading = false
+        }
+    }
+
+    LaunchedEffect(voiceDownload.requestId, voiceDownload.status) {
+        if (voiceDownload.status == VoiceDownloadStatus.SUCCESS) {
+            voiceDownload.key?.let { voiceId ->
+                ElevenLabsAuth.setUseForReading(context, false)
+                ReaderState.setVoice(context, voiceId)
+            }
+            VoiceDownloadManager.acknowledge(voiceDownload.requestId)
+        } else if (voiceDownload.status == VoiceDownloadStatus.ERROR) {
+            VoiceDownloadManager.acknowledge(voiceDownload.requestId)
         }
     }
 
@@ -274,8 +286,7 @@ fun StitchStatusVoiceBar(
                         FilterChip(
                             selected = snapshot.speed == value,
                             onClick = {
-                                ReaderState.snapshot.value = ReaderState.snapshot.value.copy(speed = value)
-                                ReaderState.save(context)
+                                ReaderState.setSpeed(context, value)
                             },
                             enabled = enabled,
                             label = { Text("${value}x") },
@@ -315,35 +326,29 @@ fun StitchStatusVoiceBar(
                     }
                     items(matches, key = { it.id }) { voice ->
                         val installed = OfflineVoice.isInstalled(context, voice)
+                        val isDownloading = voiceDownload.status == VoiceDownloadStatus.DOWNLOADING &&
+                            voiceDownload.key == voice.id
+                        val canSelect = installed || voiceDownload.status != VoiceDownloadStatus.DOWNLOADING
                         ListItem(
                             headlineContent = { Text(voice.label, maxLines = 2) },
                             supportingContent = { Text(if (installed) "Disponível no dispositivo" else "Transferir voz") },
                             trailingContent = {
-                                if (downloading == voice.id) CircularProgressIndicator(Modifier.size(20.dp))
+                                if (isDownloading) CircularProgressIndicator(Modifier.size(20.dp))
                                 else if (snapshot.voiceId == voice.id && !onlineReading)
                                     Icon(Icons.Default.Check, contentDescription = "Selecionada")
                             },
-                            modifier = Modifier.clickable(enabled = downloading == null) {
+                            modifier = Modifier.clickable(enabled = canSelect) {
                                 if (installed) {
                                     ElevenLabsAuth.setUseForReading(context, false)
-                                    ReaderState.snapshot.value = ReaderState.snapshot.value.copy(voiceId = voice.id)
-                                    ReaderState.save(context)
+                                    ReaderState.setVoice(context, voice.id)
                                     sheetOpen = false
                                 } else {
-                                    downloading = voice.id
-                                    scope.launch {
-                                        try {
-                                            OfflineVoice.install(context, voice) { _, _ -> }
-                                            ElevenLabsAuth.setUseForReading(context, false)
-                                            ReaderState.snapshot.value = ReaderState.snapshot.value.copy(voiceId = voice.id)
-                                            ReaderState.save(context)
-                                            sheetOpen = false
-                                        } catch (_: Exception) {
-                                            // Keep the current voice when the transfer cannot finish.
-                                        } finally {
-                                            downloading = null
-                                        }
-                                    }
+                                    VoiceDownloadManager.start(
+                                        context = context.applicationContext,
+                                        key = voice.id,
+                                        label = voice.label,
+                                        source = VoiceDownloadSource.LOCAL,
+                                    )
                                 }
                             },
                         )
@@ -367,6 +372,7 @@ fun StitchStatusVoiceBar(
                             modifier = Modifier.clickable {
                                 ElevenLabsAuth.selectVoice(context, voice.id, voice.name)
                                 ElevenLabsAuth.setUseForReading(context, true)
+                                ReaderState.refreshVoice(context)
                                 sheetOpen = false
                             },
                         )

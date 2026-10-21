@@ -35,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -53,6 +54,7 @@ fun SpeechToTexScreen(
     modifier: Modifier = Modifier,
 ) {
     val ctx = LocalContext.current
+    val resources = LocalResources.current
     val snapshot by SpeechToTextState.snapshot.collectAsState()
     val download by SpeechToTextState.download.collectAsState()
     val selectedModel by SpeechToTextState.selectedModelId.collectAsState()
@@ -80,7 +82,7 @@ fun SpeechToTexScreen(
         } else {
             Toast.makeText(
                 ctx,
-                ctx.getString(R.string.transcribe_permission_needed),
+                resources.getString(R.string.transcribe_permission_needed),
                 Toast.LENGTH_SHORT,
             ).show()
         }
@@ -164,10 +166,10 @@ fun SpeechToTexScreen(
                 }
 
                 AppBottomTipCard(
-                    text = "${ctx.getString(R.string.stt_screen_record_tip)}\n${
-                        ctx.getString(R.string.transcribe_supported_formats)
+                    text = "${resources.getString(R.string.stt_screen_record_tip)}\n${
+                        resources.getString(R.string.transcribe_supported_formats)
                     } · ${
-                        ctx.getString(R.string.transcribe_or_share)
+                        resources.getString(R.string.transcribe_or_share)
                     }",
                     modifier = Modifier
                         .fillMaxWidth()

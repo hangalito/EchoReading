@@ -1,14 +1,10 @@
 package com.echoreading
 
-import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.echoreading.reader.ReadingHistory
 import com.echoreading.reader.ReadingStatus
@@ -18,14 +14,12 @@ import com.echoreading.speech.SpeechToTextState
 import com.echoreading.ui.EcoApp
 import com.echoreading.ui.theme.EcoTheme
 import com.echoreading.voice.OfflineVoice
+import com.echoreading.voice.OnnxMetadata
+import com.echoreading.voice.VoiceDownloadManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
-
-    private val notificationPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { /* granted: Boolean — no-op, the app works either way */ }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,21 +27,15 @@ class MainActivity : ComponentActivity() {
         ReaderState.restore(this)
         SpeechToTextState.restore(this)
         ReadingHistory.init(this)
+        VoiceDownloadManager.initialize(this)
 
         lifecycleScope.launch(Dispatchers.IO) {
             OfflineVoice.prewarmEspeakData(applicationContext)
+            OnnxMetadata.repairAllInstalledVoices(applicationContext)
         }
 
         if (savedInstanceState == null) {
             handleIncomingIntent(intent)
-        }
-
-        // Ask for POST_NOTIFICATIONS on first open
-        if (savedInstanceState == null &&
-            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
 
         setContent { EcoTheme { EcoApp() } }

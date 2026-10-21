@@ -90,9 +90,9 @@
     <string name="save_history_toggle">Guardar Histórico de Leituras</string>
     <string name="save_history_sub">Salvar textos automaticamente no armazenamento local para reutilização</string>
     <string name="privacy_title">Privacidade Local e Sem Rastreio</string>
-    <string name="privacy_body">Todos os dados e textos permanecem exclusivamente no armazenamento local do dispositivo. Nenhum dado é enviado para servidores externos.</string>
+    <string name="privacy_body">Por predefinição, textos, histórico e preferências ficam no armazenamento local do dispositivo e não são enviados para servidores externos. As cópias de segurança do Android estão desativadas. Se ativar as vozes ElevenLabs opcionais, o texto a sintetizar é enviado para a ElevenLabs através da Internet.</string>
     <string name="cancel">Cancelar</string>
-    <string name="engine_version_info">Eco Leitura Motor v2.1.2 — Sintetizador neural ativo offline com privacidade protegida</string>
+    <string name="engine_version_info">Eco Leitura Motor v2.2.0 — Sintetizador neural ativo offline com privacidade protegida</string>
     <!-- Notification controls -->
     <string name="reading_status_channel">Estado da Leitura</string>
     <string name="reading_complete_title">Leitura Concluída</string>

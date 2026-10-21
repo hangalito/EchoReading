@@ -7,6 +7,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.navigation.compose.NavHost
@@ -28,39 +29,43 @@ fun EcoApp() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route ?: "home"
+    // Coroutines started with LaunchedEffect(Unit) capture their first values.
+    // Read the route from this state holder so a share received later is routed
+    // using the screen that is actually visible.
+    val latestRoute = rememberUpdatedState(currentRoute)
+
+    fun navigateToTab(route: String) {
+        navController.navigate(route) {
+            // Keep Home as the single root and preserve each tab's own state.
+            popUpTo("home") { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
 
     val config = LocalConfiguration.current
     val isLandscape = config.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     LaunchedEffect(Unit) {
         ReaderState.loadTextEvent.collect {
-            if (currentRoute != "home") {
-                navController.navigate("home") {
-                    popUpTo("home") { inclusive = true }
-                    launchSingleTop = true
-                }
+            if (latestRoute.value != "home") {
+                navigateToTab("home")
             }
         }
     }
 
     LaunchedEffect(Unit) {
         SpeechToTextState.loadAudioEvent.collect {
-            if (currentRoute != "transcribe") {
-                navController.navigate("transcribe") {
-                    popUpTo("home")
-                    launchSingleTop = true
-                }
+            if (latestRoute.value != "transcribe") {
+                navigateToTab("transcribe")
             }
         }
     }
 
     LaunchedEffect(Unit) {
         SpeechToTextState.pendingAudioUri.collect { uri ->
-            if (uri != null && currentRoute != "transcribe") {
-                navController.navigate("transcribe") {
-                    popUpTo("home")
-                    launchSingleTop = true
-                }
+            if (uri != null && latestRoute.value != "transcribe") {
+                navigateToTab("transcribe")
             }
         }
     }
@@ -73,24 +78,18 @@ fun EcoApp() {
         ) {
             composable("home") { ReaderHome() }
             composable("transcribe") { SpeechToTexScreen() }
-            composable("history") { HistoryScreen(navController) }
+            composable("history") { HistoryScreen() }
             composable("settings") { SettingsScreen() }
         }
     }
 
     if (isLandscape) {
         AppLandscapeViewPort(navContent, currentRoute) { route ->
-            navController.navigate(route) {
-                popUpTo("home") { inclusive = true }
-                launchSingleTop = true
-            }
+            navigateToTab(route)
         }
     } else {
         AppPortraitViewPort(navContent, currentRoute) { route ->
-            navController.navigate(route) {
-                popUpTo("home") { inclusive = true }
-                launchSingleTop = true
-            }
+            navigateToTab(route)
         }
     }
 }

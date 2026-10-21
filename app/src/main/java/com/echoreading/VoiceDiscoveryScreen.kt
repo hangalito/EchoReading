@@ -55,8 +55,8 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -74,6 +74,9 @@ import com.echoreading.reader.WavFiles
 import com.echoreading.voice.CatalogVoice
 import com.echoreading.voice.OfflineVoice
 import com.echoreading.voice.VoiceCatalog
+import com.echoreading.voice.VoiceDownloadManager
+import com.echoreading.voice.VoiceDownloadSource
+import com.echoreading.voice.VoiceDownloadStatus
 import com.echoreading.voice.catalogVoiceCountryLabel
 import com.echoreading.voice.catalogVoiceGroupLabel
 import com.echoreading.voice.sampleGreetingFor
@@ -106,10 +109,8 @@ fun VoiceDiscoveryScreen(onBack: () -> Unit) {
     var selectedFamily by remember { mutableStateOf("pt") }
     var showLanguageFilter by remember { mutableStateOf(false) }
 
-    // Download state
-    var downloadingKey by remember { mutableStateOf<String?>(null) }
-    var downloadProgress by remember { mutableFloatStateOf(0f) }
-    var downloadJob by remember { mutableStateOf<Job?>(null) }
+    // Download state is app-scoped so leaving this screen does not cancel it.
+    val voiceDownload by VoiceDownloadManager.state.collectAsState()
 
     // Installed cache invalidation tracker
     var installedVersion by remember { mutableIntStateOf(0) }
@@ -149,6 +150,29 @@ fun VoiceDiscoveryScreen(onBack: () -> Unit) {
 
     LaunchedEffect(Unit) {
         loadCatalog(forceRefresh = false)
+    }
+
+    LaunchedEffect(voiceDownload.requestId, voiceDownload.status) {
+        when (voiceDownload.status) {
+            VoiceDownloadStatus.SUCCESS -> {
+                installedVersion++
+                Toast.makeText(
+                    context,
+                    "Voz ${voiceDownload.label.orEmpty().replaceFirstChar { it.uppercase() }} transferida com sucesso!",
+                    Toast.LENGTH_SHORT,
+                ).show()
+                VoiceDownloadManager.acknowledge(voiceDownload.requestId)
+            }
+            VoiceDownloadStatus.ERROR -> {
+                Toast.makeText(
+                    context,
+                    "Erro ao transferir voz: ${voiceDownload.error ?: "Falha na transferência"}",
+                    Toast.LENGTH_LONG,
+                ).show()
+                VoiceDownloadManager.acknowledge(voiceDownload.requestId)
+            }
+            else -> Unit
+        }
     }
 
     fun playSample(voice: CatalogVoice) {
@@ -482,52 +506,28 @@ fun VoiceDiscoveryScreen(onBack: () -> Unit) {
                             val isInstalled = remember(voice.key, installedVersion) {
                                 isVoiceInstalled(context, voice)
                             }
-                            val isDownloading = downloadingKey == voice.key
+                            val isDownloading = voiceDownload.status == VoiceDownloadStatus.DOWNLOADING &&
+                                voiceDownload.key == voice.key
                             val isPlayingThis = playingVoiceKey == voice.key
 
                             VoiceDiscoveryCard(
                                 voice = voice,
                                 isInstalled = isInstalled,
                                 isDownloading = isDownloading,
-                                canDownload = downloadingKey == null,
-                                progress = if (isDownloading) downloadProgress else 0f,
+                                canDownload = voiceDownload.status != VoiceDownloadStatus.DOWNLOADING,
+                                progress = if (isDownloading) voiceDownload.progress else 0f,
                                 isPlaying = isPlayingThis,
                                 onPlaySample = { playSample(voice) },
                                 onDownload = {
-                                    if (downloadingKey != null) return@VoiceDiscoveryCard
-                                    downloadingKey = voice.key
-                                    downloadProgress = 0f
-                                    downloadJob = scope.launch {
-                                        try {
-                                            OfflineVoice.installFromCatalog(context, voice) { copied, total ->
-                                                if (total > 0) {
-                                                    downloadProgress = copied.toFloat() / total
-                                                }
-                                            }
-                                            installedVersion++
-                                            Toast.makeText(
-                                                context,
-                                                "Voz ${voice.name.replaceFirstChar { it.uppercase() }} transferida com sucesso!",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        } catch (e: Exception) {
-                                            if (e !is CancellationException) {
-                                                Toast.makeText(
-                                                    context,
-                                                    "Erro ao transferir voz: ${e.message ?: "Falha na transferência"}",
-                                                    Toast.LENGTH_LONG
-                                                ).show()
-                                            }
-                                        } finally {
-                                            downloadingKey = null
-                                            downloadJob = null
-                                        }
-                                    }
+                                    VoiceDownloadManager.start(
+                                        context = context.applicationContext,
+                                        key = voice.key,
+                                        label = voice.name,
+                                        source = VoiceDownloadSource.CATALOG,
+                                    )
                                 },
                                 onCancel = {
-                                    downloadJob?.cancel()
-                                    downloadJob = null
-                                    downloadingKey = null
+                                    VoiceDownloadManager.cancel()
                                     Toast.makeText(context, "Transferência cancelada", Toast.LENGTH_SHORT).show()
                                 }
                             )

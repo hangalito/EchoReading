@@ -314,20 +314,7 @@ fun QuickReaderPopupWidget(
                             .weight(1f)
                             .height(34.dp)
                             .clickable {
-                                ReaderState.snapshot.value =
-                                    ReaderState.snapshot.value.copy(speed = s)
-                                ReaderState.save(ctx)
-                                val intent =
-                                    Intent(ctx, ReaderPlaybackService::class.java).apply {
-                                        action = ReaderPlaybackService.ACTION_SPEED
-                                        putExtra(ReaderPlaybackService.EXTRA_SPEED, s)
-                                        putExtra(ReaderPlaybackService.EXTRA_TEXT, text)
-                                        putExtra(
-                                            ReaderPlaybackService.EXTRA_POSITION,
-                                            snapshot.positionMs
-                                        )
-                                    }
-                                ctx.startService(intent)
+                                ReaderState.setSpeed(ctx, s)
                             }
                     ) {
                         Box(contentAlignment = Alignment.Center) {

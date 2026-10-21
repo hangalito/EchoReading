@@ -32,7 +32,7 @@ import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.Forward10
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.filled.Replay10
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Stop
@@ -95,6 +95,17 @@ fun ReaderHome() {
         val draft = context.getSharedPreferences("reading", Context.MODE_PRIVATE)
             .getString("draft", snapshot.text).orEmpty()
         mutableStateOf(TextFieldValue(draft))
+    }
+    var appliedLoadEpoch by rememberSaveable { mutableStateOf(snapshot.loadEpoch) }
+
+    // A share/history load can happen while another tab is visible, so Home's
+    // event collector is not running. The epoch makes the new text authoritative
+    // when Home is next composed, without overwriting text the user is typing.
+    LaunchedEffect(snapshot.loadEpoch) {
+        if (snapshot.loadEpoch != appliedLoadEpoch) {
+            appliedLoadEpoch = snapshot.loadEpoch
+            input = TextFieldValue(text = snapshot.text, selection = TextRange(0))
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -321,7 +332,10 @@ fun ReaderHome() {
                 }
             }
 
-            StitchStatusVoiceBar(snapshot = snapshot, enabled = editable, showSpeed = true)
+            // Voice/speed stay editable during playback; the service restarts
+            // at the live position when either changes. Only the draft text
+            // field is locked while a session is active.
+            StitchStatusVoiceBar(snapshot = snapshot, enabled = true, showSpeed = true)
 
             // Reprodutor de Voz Card (Bordered M3 Card from Stitch)
             Card(
@@ -394,12 +408,20 @@ fun ReaderHome() {
                             Surface(
                                 shape = CircleShape,
                                 color = MaterialTheme.colorScheme.surfaceContainer,
-                                modifier = Modifier.size(32.dp)
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clickable(enabled = input.text.isNotBlank()) {
+                                        sendCommand(
+                                            context,
+                                            ReaderPlaybackService.ACTION_READ,
+                                            input.text,
+                                        )
+                                    }
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
-                                        Icons.Default.Repeat,
-                                        contentDescription = "Repetir",
+                                        Icons.Default.Replay,
+                                        contentDescription = "Reiniciar leitura",
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier.size(16.dp)
                                     )
@@ -423,11 +445,25 @@ fun ReaderHome() {
                             0f,
                             1f
                         ) else 0f
+                    var scrubProgress by remember { mutableStateOf<Float?>(null) }
+                    val displayedPosition = scrubProgress?.let {
+                        (it * snapshot.durationMs).toLong()
+                    } ?: snapshot.positionMs
 
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Slider(
-                            value = progress,
-                            onValueChange = { /* scrubbing preview */ },
+                            value = scrubProgress ?: progress,
+                            onValueChange = { scrubProgress = it.coerceIn(0f, 1f) },
+                            onValueChangeFinished = {
+                                val target = ((scrubProgress ?: progress) * snapshot.durationMs).toLong()
+                                scrubProgress = null
+                                sendCommand(
+                                    context,
+                                    ReaderPlaybackService.ACTION_SEEK,
+                                    positionMs = target,
+                                )
+                            },
+                            enabled = hasDuration,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(16.dp),
@@ -450,7 +486,7 @@ fun ReaderHome() {
                                 horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 Text(
-                                    formatTime(snapshot.positionMs),
+                                    formatTime(displayedPosition),
                                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                                     color = MaterialTheme.colorScheme.primary
                                 )

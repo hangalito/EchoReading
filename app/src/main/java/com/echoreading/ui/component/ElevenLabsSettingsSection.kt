@@ -120,6 +120,11 @@ fun ElevenLabsSettingsSection() {
                 }
                 Switch(checked = enabled, onCheckedChange = { ElevenLabsAuth.setEnabled(context, it) })
             }
+            Text(
+                "Com as vozes ElevenLabs ativas, o texto a sintetizar é enviado para a ElevenLabs. Sem esta opção, a leitura usa apenas vozes locais.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             if (!enabled) return@Column
 
             HorizontalDivider()

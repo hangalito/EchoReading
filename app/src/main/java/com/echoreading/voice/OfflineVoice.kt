@@ -84,7 +84,6 @@ object OfflineVoice {
         discoveryCache?.let { return it }
         val voicesDir = File(context.noBackupFilesDir, "voices")
         if (!voicesDir.isDirectory) return emptyList()
-        OnnxMetadata.repairAllInstalledVoices(context)
         val hardcodedIds = voices.map { it.id }.toSet()
         val result = voicesDir.listFiles()?.filter { dir ->
             dir.isDirectory && dir.name !in hardcodedIds &&
