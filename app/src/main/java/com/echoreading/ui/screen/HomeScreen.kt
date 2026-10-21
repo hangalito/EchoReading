@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
@@ -45,8 +44,6 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -57,9 +54,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
@@ -69,6 +65,9 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.echoreading.R
 import com.echoreading.ui.component.AppBottomTipCard
+import com.echoreading.ui.component.AppTextAction
+import com.echoreading.ui.component.AppTextCard
+import com.echoreading.ui.component.AppTextStatPill
 import com.echoreading.ui.component.SoundWave
 import com.echoreading.reader.MarkdownText
 import com.echoreading.reader.ReaderPlaybackService
@@ -85,6 +84,7 @@ import kotlin.time.Duration.Companion.milliseconds
 @Composable
 fun ReaderHome() {
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
     val snapshot by ReaderState.snapshot.collectAsState()
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
@@ -121,11 +121,25 @@ fun ReaderHome() {
     }
 
     val editable = snapshot.status == ReadingStatus.IDLE || snapshot.status == ReadingStatus.ERROR
+    LaunchedEffect(editable) {
+        if (!editable) focusManager.clearFocus()
+    }
     val markdown = remember(input.text) { MarkdownText.parse(input.text) }
     val accent = MaterialTheme.colorScheme.primary
     val codeBackground = MaterialTheme.colorScheme.surfaceContainerHigh
     val markdownTransformation = remember(markdown, accent, codeBackground) {
         MarkdownVisualTransformation(markdown, accent, codeBackground)
+    }
+    val words = remember(markdown.spokenText) {
+        if (markdown.spokenText.isBlank()) {
+            0
+        } else {
+            markdown.spokenText.split("\\s+".toRegex()).count { it.isNotBlank() }
+        }
+    }
+    val chars = input.text.length
+    val estSeconds = remember(words, snapshot.speed) {
+        if (words > 0) (words / (2.5 * snapshot.speed)).toInt() else 0
     }
 
     LaunchedEffect(snapshot.characterOffset, snapshot.text, snapshot.status) {
@@ -155,182 +169,77 @@ fun ReaderHome() {
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            // Primary Input Card (Material 3 Elevated Container from Stitch)
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .shadow(elevation = 2.dp, shape = RoundedCornerShape(20.dp)),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
-                ),
-            ) {
-                Column(
-                    Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Header row: "Texto de Leitura" + Colar / Limpar buttons
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.EditNote,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(22.dp)
-                            )
-                            Text(
-                                "Texto de Leitura",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            // "Colar" pill button
-                            Surface(
-                                shape = CircleShape,
-                                color = MaterialTheme.colorScheme.surfaceContainer,
-                                modifier = Modifier.clickable(enabled = editable) {
-                                    val clipboard =
-                                        context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-                                    val clipText =
-                                        clipboard?.primaryClip?.getItemAt(0)?.text?.toString()
-                                            .orEmpty()
-                                    if (clipText.isNotBlank()) input = TextFieldValue(clipText)
-                                }
-                            ) {
-                                Row(
-                                    Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Icon(
-                                        Icons.Default.ContentPaste,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Text(
-                                        "Colar",
-                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                            }
-
-                            // Circular "Limpar" button
-                            if (input.text.isNotBlank()) {
-                                Surface(
-                                    shape = CircleShape,
-                                    color = MaterialTheme.colorScheme.surfaceContainer,
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .clickable(enabled = editable) {
-                                            input = TextFieldValue("")
-                                        }
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Icon(
-                                            Icons.Default.DeleteSweep,
-                                            contentDescription = "Limpar",
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // Text input container with soft surfaceContainerLow background
-                    Surface(
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerLow,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        TextField(
-                            value = input,
-                            onValueChange = { input = it },
-                            placeholder = {
-                                Text(
-                                    "Escreva ou cole o seu texto aqui...",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.outline
-                                )
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(160.dp),
+            // Primary input card. The shared component keeps the reader and
+            // transcription screens visually aligned while the `editable`
+            // flag makes only this instance writable.
+            AppTextCard(
+                value = input,
+                onValueChange = { input = it },
+                title = stringResource(R.string.reading_text_title),
+                icon = Icons.Default.EditNote,
+                placeholder = stringResource(R.string.reading_text_placeholder),
+                editable = editable,
+                visualTransformation = markdownTransformation,
+                headerActions = {
+                    AppTextAction(
+                        icon = Icons.Default.ContentPaste,
+                        label = stringResource(R.string.paste_text),
+                        onClick = {
+                            val clipboard =
+                                context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                            val clipText =
+                                clipboard?.primaryClip?.getItemAt(0)?.text?.toString()
+                                    .orEmpty()
+                            if (clipText.isNotBlank()) input = TextFieldValue(clipText)
+                        },
+                        enabled = editable,
+                    )
+                    if (input.text.isNotBlank()) {
+                        AppTextAction(
+                            icon = Icons.Default.DeleteSweep,
+                            contentDescription = stringResource(R.string.clear_text),
+                            onClick = { input = TextFieldValue("") },
                             enabled = editable,
-                            visualTransformation = markdownTransformation,
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = Color.Transparent,
-                                unfocusedContainerColor = Color.Transparent,
-                                disabledContainerColor = Color.Transparent,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                                disabledIndicatorColor = Color.Transparent,
-                            ),
-                            textStyle = MaterialTheme.typography.bodyLarge.copy(lineHeight = 24.sp),
                         )
                     }
-
-                    // Footnote: stats counter & estimated duration
-                    val words = remember(markdown.spokenText) {
-                        if (markdown.spokenText.isBlank()) 0 else markdown.spokenText.split("\\s+".toRegex())
-                            .count { it.isNotBlank() }
-                    }
-                    val chars = input.text.length
-                    val estSeconds = remember(words, snapshot.speed) {
-                        if (words > 0) (words / (2.5 * snapshot.speed)).toInt() else 0
-                    }
-
+                },
+                footer = {
                     Row(
-                        Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Surface(
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.surfaceContainer
-                        ) {
-                            Text(
-                                "$words palavras • $chars caracteres",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                            )
-                        }
+                        AppTextStatPill(
+                            text = stringResource(
+                                R.string.text_stats_format,
+                                words,
+                                chars,
+                            ),
+                        )
 
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
                             Icon(
                                 Icons.Default.Schedule,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(15.dp)
+                                modifier = Modifier.size(15.dp),
                             )
                             Text(
-                                if (estSeconds < 60) "~$estSeconds seg" else "~${estSeconds / 60}m ${estSeconds % 60}s",
+                                if (estSeconds < 60) {
+                                    "~$estSeconds seg"
+                                } else {
+                                    "~${estSeconds / 60}m ${estSeconds % 60}s"
+                                },
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                     }
-                }
-            }
+                },
+            )
 
             // Voice/speed stay editable during playback; the service restarts
             // at the live position when either changes. Only the draft text

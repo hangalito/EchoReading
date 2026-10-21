@@ -36,7 +36,8 @@ architecture unless a task explicitly says otherwise.
 - Files: `docs/REMEDIATION.md`, `AGENTS.md`
 - Notes: The plan and agent instructions are stored in the repository so a
   future session on any machine can resume without relying on chat history or
-  `.statem/`. They are part of the current uncommitted change set.
+  `.statem/`. They are tracked in the repository; R0-R13 were included in
+  commit `caf55bb`.
 
 ### R1. History "load to reader" must use the canonical state transition
 
@@ -340,12 +341,59 @@ architecture unless a task explicitly says otherwise.
   There is no automated regression test for this failure path yet; the evidence
   is a manual device simulation.
 
+### R14. Shared reader/transcription text card and visual alignment
+
+- Status: `[x]`
+- Files: `app/src/main/java/com/echoreading/ui/component/AppTextCard.kt`
+  (new), `app/src/main/java/com/echoreading/ui/component/AppAudioCard.kt`,
+  `app/src/main/java/com/echoreading/ui/screen/HomeScreen.kt`,
+  `app/src/main/java/com/echoreading/ui/screen/SpeechToTextScreen.kt`,
+  `app/src/main/res/values/strings.xml`, `PROJECT.md`,
+  `docs/REMEDIATION.md`
+- Problem: Home and the speech-to-text screen rendered their primary text with
+  separate implementations. The result card had no title, statistics, or shared
+  action styling; its read-only `TextField` clipped long transcripts at a fixed
+  height. The idle status card was blank, and the model-required card used a
+  loud secondary-container surface that did not match the rest of the app.
+- Change: added `AppTextCard`, a shared card with one shell/header, text
+  surface, statistics pill, and action style. `editable` is the
+  text-modification flag; `readOnlyAsText` renders a read-only instance as
+  selectable, auto-growing text instead of a fixed-height field. Home keeps its
+  existing fixed-height editable field and draft/playback logic while using the
+  shared component. During playback it becomes read-only without dimming, and
+  focus/keyboard are cleared. STT now uses the shared card for its result, adds
+  title/read-only/statistics/model controls, uses the primary FAB, and aligns
+  page padding/spacing with Home. The idle status card now has a real "Pronto
+  para transcrever" state, and the model-required card uses the regular
+  surface/border/header pattern. The model-required card is hidden while a
+  finished result is displayed.
+- Acceptance: both screens use the same primary text card component; Home text
+  is editable only when idle/error; STT result text is not editable but remains
+  selectable/copyable; existing actions and transcription state flows are
+  preserved.
+- Verification: `:app:assembleDebug` passed. JVM suite passed with 552 tests,
+  0 failures, 0 errors, 1 skipped; `:app:lintDebug` passed with 0 errors, 92
+  warnings, and 1 hint. Emulator checks covered Home text entry, clear, disabled
+  paste/clear and keyboard dismissal during playback, plus the idle STT screen
+  and a persisted-DONE result. On the physical 25028RN03A (Android 15/API 35),
+  the four-test instrumentation suite passed 4/4 in 30.915 s; manual checks
+  covered Home text entry/clear, the idle STT screen, and a persisted-DONE
+  result on the debug build. The signed release (200,449,017 bytes,
+  `CN=EchoReading Test`) was installed and opened Home and the idle STT screen
+  without a fatal exception. The result was rendered from a fake persisted
+  snapshot; no real STT model download/transcription was exercised.
+
 ## Verification log
 
 Add newest entries at the top. Include command, result, and which item it covers.
 
 | Date | Command | Result | Item |
 |---|---|---|---|
+| 2026-10-21 | `.\gradlew.bat :app:testDebugUnitTest :app:lintDebug` | 552 tests, 0 failures, 0 errors, 1 skipped (30 suites); lint 0 errors, 92 warnings, 1 hint | R1-R8, R11-R14 |
+| 2026-10-21 | Physical 25028RN03A: launch signed release 2.2.0, open Transcrever | Home and idle STT rendered; no `FATAL EXCEPTION`; real model download/transcription not exercised | R14 |
+| 2026-10-21 | `.\gradlew.bat :app:assembleRelease` (test signing env); `apksigner verify --print-certs` | `BUILD SUCCESSFUL`; signed APK 200,449,017 bytes; cert `CN=EchoReading Test`; installed and launched on the physical device | R10, R14 |
+| 2026-10-21 | Physical 25028RN03A: debug app, Home text entry/clear, fake persisted-DONE STT result | Text and statistics updated; shared read-only result card rendered; screenshot captured; fake snapshot only | R14 |
+| 2026-10-21 | Physical 25028RN03A (Android 15/API 35): install debug app/test APK, `adb shell am instrument -w -r com.echoreading.test/androidx.test.runner.AndroidJUnitRunner` | `OK (4 tests)`; 4 tests, 0 failures, 0 errors, 30.915 s | R9, R14 |
 | 2026-10-21 | Final signed R13 release: start Edresson download, force-stop at `1%`, relaunch | WorkManager restarted `VoiceDownloadWorker`; `Worker result SUCCESS`; Settings showed `2 vozes · 120 MB` (Tugão + Edresson); no `FATAL EXCEPTION` | R12, R13 |
 | 2026-10-21 | Debug app: 0-byte read-only `databases/history.db`, share text, start playback | Logcat showed open failures on attempts 1 and 2; DB recreated at 28,672 bytes, `user_version=1`, one entry; playback 00:00/00:02; no `FATAL EXCEPTION` | R13 |
 | 2026-10-21 | Final signed release: install 200,439,120-byte APK, share text, play Tugão | `BUFFERING -> PLAYING`, 3 s duration, position advanced; no history/playback crash | R10, R13 |
@@ -379,7 +427,7 @@ model-dependent tests now execute instead of being skipped.
 
 1. Read this file and `AGENTS.md`.
 2. Run `git status --short` and inspect the current diff before touching files.
-3. R1-R13 are complete. No in-repo remediation item is open. Remaining release
+3. R1-R14 are complete. No in-repo remediation item is open. Remaining release
    steps are external: production keystore/signing, Play submission and
    target-API policy check, and vendoring or checksum-verifying the pinned
    JitPack Sherpa AAR. Optional follow-ups: an automated history-DB failure test
@@ -407,4 +455,5 @@ model-dependent tests now execute instead of being skipped.
 - The local machine is Windows; use `.\gradlew.bat`.
 - A full clean build can take several minutes; keep several GB free for APKs
   and reports.
-- All changes in this remediation pass are currently uncommitted on `dev`.
+- R1-R13 were committed in `caf55bb`; the R14 visual changes (including this
+  documentation) remain uncommitted on `dev`.

@@ -81,8 +81,9 @@ Android 13 (API 33) or newer.
   adaptive layout.
 - `app/src/main/java/com/echoreading/ui/screen/`: reader Home and speech-to-text
   screens.
-- `app/src/main/java/com/echoreading/ui/component/`: app bar/voice picker, audio
-  card, Quick Read popup, and shared UI.
+- `app/src/main/java/com/echoreading/ui/component/`: app bar/voice picker,
+  shared reader/transcription text card (`AppTextCard`), audio card, Quick Read
+  popup, and shared UI.
 - `app/src/main/java/com/echoreading/reader/`: reader state, playback service,
   history, chunks, audio cache, and WAV writing.
 - `app/src/main/java/com/echoreading/voice/`: TTS models, catalog, downloads,

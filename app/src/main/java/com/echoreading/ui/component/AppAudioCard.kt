@@ -5,7 +5,6 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,16 +14,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.Icons.Default
+import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
@@ -36,19 +40,20 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.echoreading.R
 import com.echoreading.reader.ReaderState
@@ -108,9 +113,9 @@ fun TranscriptionActionFab(
                 }
             },
             containerColor = if (processing) colorScheme.errorContainer
-            else colorScheme.primaryContainer,
+            else colorScheme.primary,
             contentColor = if (processing) colorScheme.onErrorContainer
-            else colorScheme.onPrimaryContainer,
+            else colorScheme.onPrimary,
             elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp),
         ) {
             Icon(
@@ -156,18 +161,18 @@ fun SpeechProcessStatusCard(
         TranscriptionStatus.MODEL_REQUIRED -> stringResource(R.string.transcribe_model_required)
         TranscriptionStatus.DONE -> stringResource(R.string.transcribe_done)
         TranscriptionStatus.ERROR -> stringResource(R.string.transcribe_error)
-        TranscriptionStatus.IDLE -> ""
+        TranscriptionStatus.IDLE -> stringResource(R.string.transcribe_ready)
     }
 
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(16.dp),
         color = if (isProblem) colorScheme.errorContainer.copy(alpha = 0.45f)
         else colorScheme.surfaceContainerLow,
     ) {
         Column(
-            Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+            Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -178,6 +183,12 @@ fun SpeechProcessStatusCard(
                         Default.ErrorOutline,
                         null,
                         tint = colorScheme.error
+                    )
+
+                    snapshot.status == TranscriptionStatus.DONE -> Icon(
+                        Default.CheckCircle,
+                        null,
+                        tint = colorScheme.primary,
                     )
 
                     isWorking -> CircularProgressIndicator(
@@ -222,13 +233,17 @@ fun SpeechProcessStatusCard(
                 ) {
                     Text(
                         text = stringResource(R.string.transcribe_model_selected, selectedModelLabel),
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).padding(end = 8.dp),
                         style = MaterialTheme.typography.labelSmall,
                         color = colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
-                    TextButton(onClick = onChangeModel) {
-                        Text(stringResource(R.string.transcribe_change_model))
-                    }
+                    AppTextAction(
+                        icon = Default.Tune,
+                        label = stringResource(R.string.transcribe_change_model),
+                        onClick = onChangeModel,
+                    )
                 }
             }
 
@@ -269,55 +284,86 @@ fun SpeechProcessResultCard(
     modifier: Modifier = Modifier,
     onChangeModel: () -> Unit = {},
 ) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        color = colorScheme.surfaceContainerLowest,
-        tonalElevation = 1.dp,
-    ) {
-        Column(
-            Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                ResultAction(
-                    icon = Default.PlayArrow,
-                    label = stringResource(R.string.transcribe_listen),
-                    onClick = { ReaderState.loadText(ctx, snapshot.transcribedText) }
-                )
-                ResultAction(
-                    modifier = Modifier.padding(horizontal = 8.dp),
-                    icon = Default.Share,
-                    label = stringResource(R.string.transcribe_share),
-                    onClick = {
-                        val intent = Intent(Intent.ACTION_SEND).apply {
-                            type = "text/plain"
-                            putExtra(Intent.EXTRA_TEXT, snapshot.transcribedText)
-                        }
-                        ctx.startActivity(Intent.createChooser(intent, "Partilhar"))
-                    },
-                )
-                ResultAction(
-                    icon = Default.ContentCopy,
-                    label = stringResource(R.string.transcribe_copy),
-                    onClick = {
-                        val clipboard =
-                            ctx.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        clipboard.setPrimaryClip(
-                            ClipData.newPlainText(
-                                "Transcrição",
-                                snapshot.transcribedText
-                            )
-                        )
-                    },
-                )
-            }
+    val transcribedText = snapshot.transcribedText
+    val textValue = remember(snapshot.transcribedText) {
+        TextFieldValue(snapshot.transcribedText)
+    }
+    val words = remember(transcribedText) {
+        if (transcribedText.isBlank()) {
+            0
+        } else {
+            transcribedText.trim().split("\\s+".toRegex()).count { it.isNotBlank() }
+        }
+    }
+    val chars = transcribedText.length
 
-            Text(
-                text = snapshot.transcribedText,
-                style = MaterialTheme.typography.bodyLarge,
-                color = colorScheme.onSurface,
+    AppTextCard(
+        value = textValue,
+        onValueChange = {},
+        title = stringResource(R.string.transcribe_result_title),
+        icon = Icons.AutoMirrored.Filled.Notes,
+        placeholder = "",
+        modifier = modifier,
+        editable = false,
+        readOnlyAsText = true,
+        headerActions = {
+            AppTextAction(
+                icon = Default.PlayArrow,
+                contentDescription = stringResource(R.string.transcribe_listen),
+                onClick = { ReaderState.loadText(ctx, transcribedText) },
             )
+            AppTextAction(
+                icon = Default.Share,
+                contentDescription = stringResource(R.string.transcribe_share),
+                onClick = {
+                    val intent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, transcribedText)
+                    }
+                    ctx.startActivity(Intent.createChooser(intent, "Partilhar"))
+                },
+            )
+            AppTextAction(
+                icon = Default.ContentCopy,
+                contentDescription = stringResource(R.string.transcribe_copy),
+                onClick = {
+                    val clipboard =
+                        ctx.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    clipboard.setPrimaryClip(
+                        ClipData.newPlainText(
+                            "Transcrição",
+                            transcribedText,
+                        ),
+                    )
+                },
+            )
+        },
+        footer = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                AppTextStatPill(
+                    text = stringResource(R.string.text_stats_format, words, chars),
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Icon(
+                        imageVector = Default.Lock,
+                        contentDescription = null,
+                        tint = colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(14.dp),
+                    )
+                    Text(
+                        text = stringResource(R.string.transcribe_read_only),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -325,46 +371,20 @@ fun SpeechProcessResultCard(
             ) {
                 Text(
                     text = stringResource(R.string.transcribe_model_used, modelLabel),
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 8.dp),
                     style = MaterialTheme.typography.labelSmall,
                     color = colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
-                TextButton(onClick = onChangeModel) {
-                    Text(stringResource(R.string.transcribe_change_model))
-                }
+                AppTextAction(
+                    icon = Default.Tune,
+                    label = stringResource(R.string.transcribe_change_model),
+                    onClick = onChangeModel,
+                )
             }
-        }
-    }
-}
-
-@Composable
-private fun ResultAction(
-    icon: ImageVector,
-    label: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Surface(
-        shape = CircleShape,
-        color = colorScheme.surfaceContainer,
-        modifier = modifier.clickable(onClick = onClick),
-    ) {
-        Row(
-            Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            Icon(
-                icon,
-                null,
-                tint = colorScheme.primary,
-                modifier = Modifier.size(16.dp)
-            )
-            Text(
-                label,
-                style = MaterialTheme.typography.labelSmall,
-                color = colorScheme.primary
-            )
-        }
-    }
+        },
+    )
 }
