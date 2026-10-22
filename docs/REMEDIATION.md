@@ -439,8 +439,8 @@ architecture unless a task explicitly says otherwise.
 
 ### R16. Reader text-card growth, full-screen editing, and playback following
 
-- Status: `[~]` (implementation and emulator checks complete; the user's
-  physical-device check is still pending)
+- Status: `[x]` (implementation, emulator checks, and physical-device
+  confirmation complete)
 - Files: `app/src/main/java/com/echoreading/ui/component/AppTextCard.kt`,
   `app/src/main/java/com/echoreading/ui/screen/HomeScreen.kt`,
   `app/src/main/res/values/strings.xml`,
@@ -495,13 +495,14 @@ architecture unless a task explicitly says otherwise.
   `A225D359797B88C2FE5F944FE20E89B77D12BDEC7871C13897F889A9E7A7A3CF`,
   `CN=EchoReading Test`) was installed on the same AVD; Home opened, a short
   share intent rendered a 160 dp field with no expansion arrow, and a 30-line
-  share rendered a 200 dp field with the arrow. The physical 25028RN03A check
-  is intentionally left to the user.
-- Limitation: the emulator is not the physical display; refresh-rate behavior
-  and the final physical scroll feel remain unverified. The auto-follow
-  placement and manual-scroll rules are covered by JVM tests, but the visual
-  animation itself was only inspected on the emulator. The release artifact
-  uses the local test keystore and is not a production-signed build.
+  share rendered a 200 dp field with the arrow. On 2026-10-22 the user confirmed
+  the physical 25028RN03A check for text growth, full-screen return height, and
+  playback scrolling.
+- Limitation: the emulator is not the physical display; the final physical
+  scroll feel is now confirmed by the user. The auto-follow placement and
+  manual-scroll rules are covered by JVM tests, while the visual animation
+  itself was inspected on the emulator. The release artifact uses the local test
+  keystore and is not a production-signed build.
 
 ### R17. Queued voice transfers, global transfer control, and STT playback
 
@@ -599,6 +600,7 @@ Add newest entries at the top. Include command, result, and which item it covers
 | 2026-10-22 | Physical 25028RN03A manual: STT model sheet + playback | Tiny/Base/Small listed; selected Small persisted (`Modelo selecionado: Whisper Small`); imported 27 s MP3 showed card; `MediaPlayer` `state:started` -> `state:paused`; card persisted and played again after force-stop/relaunch; user confirmed audible | R17 |
 | 2026-10-22 | `.\gradlew.bat :app:assembleRelease` (test signing env); `adb install -r` | `BUILD SUCCESSFUL`; versionCode 6 / 2.3.0; 200,541,085 bytes; SHA-256 `ADFD66BAE5DC515C092001054660FFDC721169345300CBE0276A5A7408D1EED4`; installed over existing data; `topResumedActivity=com.echoreading/.MainActivity`; no `AndroidRuntime:E` fatal | R17 |
 | 2026-10-22 | Physical 25028RN03A: user confirmation of R15 seek bar | User reported the seek bar is perfect on the physical device; no separate 90 Hz `SurfaceFlinger` measurement was taken | R15 |
+| 2026-10-22 | Physical 25028RN03A: user confirmation of R16 | User confirmed text-card growth, full-screen return height, and playback scrolling on the physical device | R16 |
 | 2026-10-21 | `.\gradlew.bat :app:assembleRelease` (test signing env) | `BUILD SUCCESSFUL`; 200,541,085-byte test-signed APK, SHA-256 `F081EAC23E4C06B463DBC552157F1C819D2721E6124C1A42E4A480F99877ABB6` | R17 |
 | 2026-10-21 | `.\gradlew.bat :app:lintDebug --console=plain` | `BUILD SUCCESSFUL`; 0 errors, 94 warnings, 1 hint | R17 |
 | 2026-10-21 | `.\gradlew.bat :app:testDebugUnitTest --console=plain` | `BUILD SUCCESSFUL`; 567 tests, 0 failures, 0 errors, 1 skipped (33 suites); `VoiceDownloadQueueTest` 7/7 | R17 |
@@ -651,12 +653,12 @@ model-dependent tests now execute instead of being skipped.
 2. Run `git status --short` and inspect the current diff before touching files.
 3. R1-R14 are complete and committed (`caf55bb` through `6d54529`). R15 is
    complete: the user confirmed the seek bar on the physical display; no
-   separate 90 Hz measurement was taken. R16 is implemented and checked on the
-   Pixel_6 AVD, but remains `[~]` until the user checks text growth, the
-   full-screen return height, and playback scrolling on the physical device.
-   R17 is implemented and validated on the physical device: the FIFO queue,
-   global transfer chip/sheet, removal/cancel controls, STT model sheet, and
-   STT play/pause all exercised successfully. Transcription accuracy remains
+   separate 90 Hz measurement was taken. R16 is complete: the user confirmed
+   text growth, the full-screen return height, and playback scrolling on the
+   physical device. R17 is implemented and validated on the physical device:
+   the FIFO queue, global transfer chip/sheet, removal/cancel controls, STT
+   model sheet, and STT play/pause all exercised successfully. Transcription
+   accuracy remains
    model-dependent. Remaining release steps are external: production
    keystore/signing, Play submission and target-API policy check, and vendoring
    or checksum-verifying the pinned JitPack Sherpa AAR. Optional follow-ups: an
