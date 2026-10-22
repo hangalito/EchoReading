@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Check
@@ -124,7 +125,10 @@ fun EchoReadingTopAppBar(
         },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = colorScheme.surface.copy(alpha = 0.95f),
-        )
+        ),
+        actions = {
+            VoiceTransferStatusAction()
+        },
     )
 }
 
@@ -235,15 +239,13 @@ fun StitchStatusVoiceBar(
         }
     }
 
-    LaunchedEffect(voiceDownload.requestId, voiceDownload.status) {
-        if (voiceDownload.status == VoiceDownloadStatus.SUCCESS) {
-            voiceDownload.key?.let { voiceId ->
+    LaunchedEffect(voiceDownload.completions) {
+        voiceDownload.completions.forEach { completion ->
+            if (completion.success && completion.key.isNotBlank()) {
                 ElevenLabsAuth.setUseForReading(context, false)
-                ReaderState.setVoice(context, voiceId)
+                ReaderState.setVoice(context, completion.key)
             }
-            VoiceDownloadManager.acknowledge(voiceDownload.requestId)
-        } else if (voiceDownload.status == VoiceDownloadStatus.ERROR) {
-            VoiceDownloadManager.acknowledge(voiceDownload.requestId)
+            VoiceDownloadManager.acknowledge(completion.requestId)
         }
     }
 
@@ -328,14 +330,31 @@ fun StitchStatusVoiceBar(
                         val installed = OfflineVoice.isInstalled(context, voice)
                         val isDownloading = voiceDownload.status == VoiceDownloadStatus.DOWNLOADING &&
                             voiceDownload.key == voice.id
-                        val canSelect = installed || voiceDownload.status != VoiceDownloadStatus.DOWNLOADING
+                        val queueIndex = voiceDownload.queued.indexOfFirst { it.key == voice.id }
+                        val isQueued = queueIndex >= 0
+                        val canSelect = installed || (!isDownloading && !isQueued)
                         ListItem(
                             headlineContent = { Text(voice.label, maxLines = 2) },
-                            supportingContent = { Text(if (installed) "Disponível no dispositivo" else "Transferir voz") },
+                            supportingContent = {
+                                Text(
+                                    when {
+                                        installed -> "Disponível no dispositivo"
+                                        isDownloading -> "A transferir…"
+                                        isQueued -> "Na fila · ${queueIndex + 1}.º"
+                                        else -> "Transferir voz"
+                                    },
+                                )
+                            },
                             trailingContent = {
-                                if (isDownloading) CircularProgressIndicator(Modifier.size(20.dp))
-                                else if (snapshot.voiceId == voice.id && !onlineReading)
-                                    Icon(Icons.Default.Check, contentDescription = "Selecionada")
+                                when {
+                                    isDownloading -> CircularProgressIndicator(Modifier.size(20.dp))
+                                    isQueued -> Icon(
+                                        Icons.Default.Schedule,
+                                        contentDescription = "Na fila",
+                                    )
+                                    snapshot.voiceId == voice.id && !onlineReading ->
+                                        Icon(Icons.Default.Check, contentDescription = "Selecionada")
+                                }
                             },
                             modifier = Modifier.clickable(enabled = canSelect) {
                                 if (installed) {

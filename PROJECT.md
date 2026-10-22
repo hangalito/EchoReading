@@ -1,4 +1,4 @@
-# Project: EchoReading 2.2.0
+# Project: EchoReading 2.3.0
 
 EchoReading is an offline-first Android reader and speech-to-text assistant built
 with Jetpack Compose, Media3, Sherpa-ONNX, and Piper/Whisper models. It requires
@@ -44,9 +44,14 @@ Android 13 (API 33) or newer.
   VITS models through Sherpa-ONNX. The Portuguese (Portugal) Tugão voice is the
   bundled/default model; Portuguese (Brazil) and English (US) models are optional
   downloads. `voice/VoiceDownloadWorker.kt` runs transfers through WorkManager,
-  and `voice/VoiceDownloadManager.kt` adapts its progress to the existing
-  `StateFlow` UI contract. Downloads survive navigation and app-process death;
-  `.part` files are validated and renamed only after a complete transfer.
+  and `voice/VoiceDownloadManager.kt` maintains a persistent FIFO queue: one
+  transfer is active at a time and the next requested voice starts automatically
+  after success, failure, or cancellation. Active progress, queue position, and
+  terminal completions are exposed through the same `StateFlow` contract; the
+  top app bar shows a global transfer chip/sheet on every route, and Settings,
+  Voice Discovery, and the voice picker allow queued voices to be removed.
+  Downloads survive navigation and app-process death; `.part` files are validated
+  and renamed only after a complete transfer.
 - **Optional online voices**: `voice/ElevenLabs*.kt` and the settings section add
   optional ElevenLabs synthesis. Enabling them sends the text to ElevenLabs over
   the Internet; offline reading never does.
@@ -54,6 +59,11 @@ Android 13 (API 33) or newer.
   `speech/SpeechToTextState.kt`, `speech/AudioDecoder.kt`, and
   `speech/OfflineSpeech.kt` implement recording, file/shared-audio ingestion,
   quality checks, chunked transcription, and resumable Whisper model downloads.
+  The STT screen selects models with the same bottom-sheet pattern as the TTS
+  voice picker, including installed size, download, pause, resume, and progress.
+  A playable copy of imported audio (or a WAV of a recording) is kept outside the
+  temporary job directory; `TranscriptionSnapshot.audioPath` survives app restart
+  and drives separate play/pause controls on the STT screen.
 - **History and storage**: `reader/ReadingHistory.kt`, `HistoryScreen.kt`, and
   `StorageStats.kt` persist and display local history and disk usage. Recursive
   storage walks run on `Dispatchers.IO`.
@@ -70,9 +80,10 @@ Android 13 (API 33) or newer.
 3. Open History and load an entry into the reader; the old session is stopped and
    the reader starts cleanly at position 0.
 4. Record or import audio, choose a Whisper model, check quality, transcribe, and
-   send the result to the reader.
+   send the result to the reader; the imported/recorded audio can be played and
+   paused on the STT screen.
 5. Manage bundled/downloaded TTS voices and Whisper models in Settings, including
-   storage usage and deletion.
+   storage usage, queue position, removal, and deletion.
 
 ## State and interface contracts
 
@@ -92,9 +103,12 @@ Android 13 (API 33) or newer.
   `ACTION_VOICE`, and `ACTION_SEEK` with `EXTRA_TEXT`, `EXTRA_POSITION`,
   `EXTRA_VOICE`, and `EXTRA_SPEED`.
 - `SpeechToTextState` exposes recording, decoding, quality, transcription, model
-  download, pause, resume, and error state.
-- `VoiceDownloadManager.state` exposes `idle/downloading/success/error`, progress,
-  bytes, and a one-shot request id used by the UI to acknowledge completion.
+  download, pause, resume, and error state. `TranscriptionSnapshot.audioPath` is
+  the retained playable copy used by the STT play/pause controls.
+- `VoiceDownloadManager.state` exposes the active transfer, progress, bytes, the
+  FIFO queue, and durable terminal completions. Screens acknowledge each
+  completion by request id; `start()` returns `STARTED`, `QUEUED`, or
+  `DUPLICATE`.
 
 ## Code layout
 
@@ -121,8 +135,8 @@ Android 13 (API 33) or newer.
 ## Build and provisioning
 
 - JDK 21 and Android SDK 37. Current configuration: `minSdk 33`,
-  `targetSdk 36`, `compileSdk 37`, Java/Kotlin target 17, version `2.2.0`
-  (`versionCode 5`).
+  `targetSdk 36`, `compileSdk 37`, Java/Kotlin target 17, version `2.3.0`
+  (`versionCode 6`).
 - Release builds enable R8 minification and resource shrinking. Sherpa/ONNX keep
   rules live in `app/proguard-rules.pro`.
 - The 63 MB Tugão `.onnx` model is intentionally not stored in normal Git history.

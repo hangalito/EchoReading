@@ -23,6 +23,7 @@ data class TranscriptionSnapshot(
     val error: String? = null,
     val qualityReport: AudioQualityReport? = null,
     val progress: Float = 0f,
+    val audioPath: String = "",
 )
 
 enum class ModelDownloadStatus { IDLE, DOWNLOADING, PAUSED, DONE, ERROR }
@@ -76,6 +77,7 @@ object SpeechToTextState {
             transcribedText = prefs.getString("text", "").orEmpty(),
             error = prefs.getString("error", null),
             progress = prefs.getFloat("progress", 0f),
+            audioPath = prefs.getString("audio_path", "").orEmpty(),
         )
     }
 
@@ -162,6 +164,7 @@ object SpeechToTextState {
             .putString("text", value.transcribedText)
             .putString("error", value.error)
             .putFloat("progress", value.progress)
+            .putString("audio_path", value.audioPath)
             .apply()
     }
 

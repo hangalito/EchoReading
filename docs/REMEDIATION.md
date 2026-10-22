@@ -1,7 +1,7 @@
 # EchoReading Remediation Plan
 
-Last updated: 2026-10-21
-Base revision: `7e45cd0` (branch `dev`, version 2.2.0)
+Last updated: 2026-10-22
+Base revision: `7e45cd0` (branch `dev`; version 2.2.0 at the start of this work, currently 2.3.0)
 
 This file is the durable source of truth for the remediation work. Any agent or
 developer continuing this work should read this file first, keep the status
@@ -386,8 +386,8 @@ architecture unless a task explicitly says otherwise.
 
 ### R15. Frame-clock playback progress and seek-bar smoothness
 
-- Status: `[~]` (implementation and automated checks complete; final visual
-  confirmation on the physical display is still pending)
+- Status: `[x]` (implementation, automated checks, and physical-device
+  confirmation complete)
 - Files: `app/src/main/java/com/echoreading/ui/component/PlaybackProgressSection.kt`
   (new), `app/src/main/java/com/echoreading/ui/screen/HomeScreen.kt`,
   `app/src/main/java/com/echoreading/reader/ReaderState.kt`,
@@ -426,14 +426,16 @@ architecture unless a task explicitly says otherwise.
   On the physical 25028RN03A (Android 15/API 35), playback reached
   `EM LEITURA` and advanced (`00:04 / 00:22`), pause held a stable position
   (`00:20 / 00:22` across two checks), and a slider tap sought to `00:14`.
-  Device interaction was then interrupted before the full smoothness run, so the
-  final 90 Hz observation is not claimed.
-- Limitation: while this work was verified, `dumpsys SurfaceFlinger` reported
-  `activeMode ... vsyncRate=60.00 Hz`, and the vendor setting
+  Device interaction was then interrupted before the full smoothness run. On
+  2026-10-22 the user confirmed on the physical device that the seek bar is
+  perfect; no separate 90 Hz `SurfaceFlinger` measurement was taken.
+- Limitation: during the automated/device checks, `dumpsys SurfaceFlinger`
+  reported `activeMode ... vsyncRate=60.00 Hz`, and the vendor setting
   `global/unisoc.display_refreshrate=60` matched it. The app does not request or
   force a display mode; the frame loop follows whatever rate the system
-  provides. A 90 Hz visual run remains unobserved. The user's earlier report of
-  lighter jumps was on the pre-fix build.
+  provides. A separate 90 Hz visual run was not measured; the user's
+  confirmation covers the physical seek-bar feel. The earlier report of lighter
+  jumps was on the pre-fix build.
 
 ### R16. Reader text-card growth, full-screen editing, and playback following
 
@@ -501,12 +503,106 @@ architecture unless a task explicitly says otherwise.
   animation itself was only inspected on the emulator. The release artifact
   uses the local test keystore and is not a production-signed build.
 
+### R17. Queued voice transfers, global transfer control, and STT playback
+
+- Status: `[x]` (validated on the physical 25028RN03A with the signed 2.3.0
+  test build)
+- Files: `app/src/main/java/com/echoreading/voice/VoiceDownloadManager.kt`,
+  `app/src/main/java/com/echoreading/ui/component/VoiceTransferStatusAction.kt`
+  (new), `app/src/main/java/com/echoreading/ui/component/AppBar.kt`,
+  `app/src/main/java/com/echoreading/SettingsScreen.kt`,
+  `app/src/main/java/com/echoreading/VoiceDiscoveryScreen.kt`,
+  `app/src/main/java/com/echoreading/ui/screen/SpeechToTextScreen.kt`,
+  `app/src/main/java/com/echoreading/speech/SpeechToTextState.kt`,
+  `app/src/main/java/com/echoreading/speech/SpeechProcessingService.kt`,
+  `app/src/main/res/values/strings.xml`,
+  `app/src/test/java/com/echoreading/voice/VoiceDownloadQueueTest.kt` (new),
+  `PROJECT.md`, `docs/REMEDIATION.md`
+- Problem: starting a second voice while one was downloading was blocked or
+  discarded, so the user had to wait and request each voice again. Transfer
+  progress was only visible on Settings or Voice Discovery. The STT model
+  selector used an installed-only `AlertDialog` instead of the TTS picker
+  pattern, and imported audio was deleted after decoding, so it could not be
+  replayed from the STT screen.
+- Change: `VoiceDownloadManager` now persists a FIFO queue plus terminal
+  completions. One WorkManager request runs at a time; the next queued voice
+  starts automatically after success, failure, or cancellation. Requests made
+  while another transfer is active return `QUEUED`, duplicate requests return
+  `DUPLICATE`, and queued items can be removed individually. A global top-app-bar
+  chip shows the active percentage and pending count on every route; its bottom
+  sheet can cancel the active transfer and remove queued voices. Settings, Voice
+  Discovery, and the local voice picker show queue position and allow removal.
+  The STT screen now uses a `ModalBottomSheet` matching the TTS picker, listing
+  every Whisper model with installed size, selection, download, pause, resume,
+  and progress. Imported audio is copied to a retained playback file under
+  `noBackupFilesDir/stt-playback`; recordings are wrapped as WAV. The path is
+  persisted in `TranscriptionSnapshot.audioPath`, the `speech-work` preferences,
+  and the service checkpoint. The STT screen shows an "Áudio da transcrição"
+  card with separate Reproduzir/Pausar controls backed by `MediaPlayer`, released
+  when the path changes or the screen leaves composition.
+- Acceptance: tapping Transferir during an active voice transfer queues the
+  voice; queued voices run in FIFO order without another tap; the global chip
+  and sheet are available outside Voice Discovery; the active transfer can be
+  cancelled and queued items removed; the STT picker can download and select
+  any Whisper model; imported and recorded audio can be played and paused from
+  the STT screen, including after the transcription job directory is removed.
+- Verification: `.\gradlew.bat :app:compileDebugKotlin --console=plain` passed
+  with only the pre-existing `outlinedButtonBorder` deprecation warning.
+  `.\gradlew.bat :app:testDebugUnitTest --console=plain` passed with 567 tests,
+  0 failures, 0 errors, 1 skipped (33 suites); the new
+  `VoiceDownloadQueueTest` passed 7/7, covering FIFO append, active/queued
+  duplicate rejection, immutable state updates, ordered removal, and a missing
+  key. `.\gradlew.bat :app:lintDebug --console=plain` passed with 0 errors, 94
+  warnings, and 1 hint after replacing `LocalContext.getString` calls with
+  `LocalResources`. A signed 2.3.0 release (`versionCode 6`, 200,541,085 bytes,
+  SHA-256 `ADFD66BAE5DC515C092001054660FFDC721169345300CBE0276A5A7408D1EED4`)
+  was built with the local test keystore, installed with `adb install -r` over
+  the existing app data, and launched; `topResumedActivity` reported
+  `com.echoreading/.MainActivity` and `AndroidRuntime:E` produced no fatal
+  exception. On the physical 25028RN03A:
+  - Voice queue: Edresson started, Amy showed `Na fila • 1.º`, and both were
+    installed when the transfer chain finished, confirming FIFO auto-advance.
+  - Global control: the top-bar chip showed the active percentage on the
+    Settings route, outside Voice Discovery. Its sheet showed `1 ativa • 1 em
+    espera`, the active progress with a cancel action, and the queued Cadu item
+    at `1.º na fila` with a remove action; removing Cadu left only the active
+    Faber transfer, and cancelling Faber returned the voice list to its prior
+    five voices/356 MB.
+  - STT model sheet: Tiny, Base, and Small were listed with installed sizes;
+    Base was marked recommended and selected. Selecting Small closed the sheet,
+    and reopening it showed `Modelo selecionado: Whisper Small`, confirming
+    persisted selection.
+  - STT playback: importing a 27-second MP3 immediately showed the
+    `Áudio da transcrição` card. Reproduzir changed the player to enabled pause
+    and `dumpsys audio` reported the app's `MediaPlayer` as `state:started`;
+    Pausar changed it to `state:paused`. After force-stop and relaunch the card
+    remained and playback started again. The user also confirmed the audio is
+    audible on the device.
+  - The imported clip was transcribed inaccurately; that is a Whisper
+    model/audio-quality limitation, not a playback or transport defect.
+- Limitation: only one playback copy is retained, so a new import or recording
+  replaces the previous one. Recorded playback duplicates the PCM as WAV until
+  the job directory is deleted. Playback is local-only and has no seek bar or
+  background media session; the requested play/pause controls are the current
+  scope. The STT model download/pause/resume actions were not separately
+  exercised on the device; the sheet listing and persisted selection were. The
+  release artifact uses the local test keystore, not a production key.
+
 ## Verification log
 
 Add newest entries at the top. Include command, result, and which item it covers.
 
 | Date | Command | Result | Item |
 |---|---|---|---|
+| 2026-10-22 | `.\gradlew.bat :app:testDebugUnitTest :app:lintDebug --console=plain` | `BUILD SUCCESSFUL`; 567 tests, 0 failures, 0 errors, 1 skipped (33 suites); lint 0 errors, 94 warnings, 1 hint | R17 |
+| 2026-10-22 | Physical 25028RN03A manual: voice queue + global sheet | Edresson active / Amy `Na fila • 1.º`; both installed after chain; chip appeared on Settings and Discovery; sheet showed active progress + queued `Cadu 1.º`; removed Cadu, left Faber active, cancelled Faber; voice list restored to 5/356 MB | R17 |
+| 2026-10-22 | Physical 25028RN03A manual: STT model sheet + playback | Tiny/Base/Small listed; selected Small persisted (`Modelo selecionado: Whisper Small`); imported 27 s MP3 showed card; `MediaPlayer` `state:started` -> `state:paused`; card persisted and played again after force-stop/relaunch; user confirmed audible | R17 |
+| 2026-10-22 | `.\gradlew.bat :app:assembleRelease` (test signing env); `adb install -r` | `BUILD SUCCESSFUL`; versionCode 6 / 2.3.0; 200,541,085 bytes; SHA-256 `ADFD66BAE5DC515C092001054660FFDC721169345300CBE0276A5A7408D1EED4`; installed over existing data; `topResumedActivity=com.echoreading/.MainActivity`; no `AndroidRuntime:E` fatal | R17 |
+| 2026-10-22 | Physical 25028RN03A: user confirmation of R15 seek bar | User reported the seek bar is perfect on the physical device; no separate 90 Hz `SurfaceFlinger` measurement was taken | R15 |
+| 2026-10-21 | `.\gradlew.bat :app:assembleRelease` (test signing env) | `BUILD SUCCESSFUL`; 200,541,085-byte test-signed APK, SHA-256 `F081EAC23E4C06B463DBC552157F1C819D2721E6124C1A42E4A480F99877ABB6` | R17 |
+| 2026-10-21 | `.\gradlew.bat :app:lintDebug --console=plain` | `BUILD SUCCESSFUL`; 0 errors, 94 warnings, 1 hint | R17 |
+| 2026-10-21 | `.\gradlew.bat :app:testDebugUnitTest --console=plain` | `BUILD SUCCESSFUL`; 567 tests, 0 failures, 0 errors, 1 skipped (33 suites); `VoiceDownloadQueueTest` 7/7 | R17 |
+| 2026-10-21 | `.\gradlew.bat :app:compileDebugKotlin --console=plain` | `BUILD SUCCESSFUL`; only pre-existing `outlinedButtonBorder` deprecation warning | R17 |
 | 2026-10-21 | `.\gradlew.bat :app:assembleRelease` (test signing env); install on Pixel_6 AVD | `BUILD SUCCESSFUL`; 200,498,977-byte APK, SHA-256 `A225D359...A7A3CF`, `CN=EchoReading Test`; short share gave a 160 dp field with no arrow, 30-line share gave a 200 dp field with the arrow; no `FATAL EXCEPTION` | R16 |
 | 2026-10-21 | `.\gradlew.bat :app:testDebugUnitTest :app:lintDebug` | 560 tests, 0 failures, 0 errors, 1 skipped (32 suites); lint 0 errors, 92 warnings, 93 findings; `AppTextCardFollowTest` 5/5 | R16 |
 | 2026-10-21 | `.\gradlew.bat :app:connectedDebugAndroidTest "-Pandroid.injected.device.serial=emulator-5554"` | `BUILD SUCCESSFUL`; 4 tests, 0 failures, 0 errors, 0 skipped in 22.340 s on Pixel_6 AVD Android 17/API 37 (existing smoke suite) | R16 |
@@ -554,14 +650,16 @@ model-dependent tests now execute instead of being skipped.
 1. Read this file and `AGENTS.md`.
 2. Run `git status --short` and inspect the current diff before touching files.
 3. R1-R14 are complete and committed (`caf55bb` through `6d54529`). R15 is
-   implemented and installed, but remains `[~]` until the progress bar is
-   watched on the physical display at the actual refresh rate and the remaining
-   seek/pause/resume paths are rechecked. R16 is implemented and checked on the
+   complete: the user confirmed the seek bar on the physical display; no
+   separate 90 Hz measurement was taken. R16 is implemented and checked on the
    Pixel_6 AVD, but remains `[~]` until the user checks text growth, the
    full-screen return height, and playback scrolling on the physical device.
-   Remaining release steps are external: production keystore/signing, Play
-   submission and target-API policy check, and vendoring or
-   checksum-verifying the pinned JitPack Sherpa AAR. Optional follow-ups: an
+   R17 is implemented and validated on the physical device: the FIFO queue,
+   global transfer chip/sheet, removal/cancel controls, STT model sheet, and
+   STT play/pause all exercised successfully. Transcription accuracy remains
+   model-dependent. Remaining release steps are external: production
+   keystore/signing, Play submission and target-API policy check, and vendoring
+   or checksum-verifying the pinned JitPack Sherpa AAR. Optional follow-ups: an
    automated history-DB failure test and a Macrobenchmark frame-timing test.
 4. Build with `.\gradlew.bat :app:testDebugUnitTest --console=plain`.
 5. For device changes run `.\gradlew.bat :app:connectedDebugAndroidTest`

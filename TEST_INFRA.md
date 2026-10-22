@@ -1,4 +1,4 @@
-# Test Infrastructure Specification — EchoReading 2.2.0
+# Test Infrastructure Specification — EchoReading 2.3.0
 
 ## 1. Scope
 

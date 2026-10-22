@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material3.Button
@@ -67,6 +68,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -76,6 +79,7 @@ import com.echoreading.voice.OfflineVoice
 import com.echoreading.voice.VoiceCatalog
 import com.echoreading.voice.VoiceDownloadManager
 import com.echoreading.voice.VoiceDownloadSource
+import com.echoreading.voice.VoiceDownloadStartResult
 import com.echoreading.voice.VoiceDownloadStatus
 import com.echoreading.voice.catalogVoiceCountryLabel
 import com.echoreading.voice.catalogVoiceGroupLabel
@@ -96,6 +100,7 @@ import java.util.Locale
 @Composable
 fun VoiceDiscoveryScreen(onBack: () -> Unit) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
 
     // Catalog state
@@ -152,26 +157,23 @@ fun VoiceDiscoveryScreen(onBack: () -> Unit) {
         loadCatalog(forceRefresh = false)
     }
 
-    LaunchedEffect(voiceDownload.requestId, voiceDownload.status) {
-        when (voiceDownload.status) {
-            VoiceDownloadStatus.SUCCESS -> {
+    LaunchedEffect(voiceDownload.completions) {
+        voiceDownload.completions.forEach { completion ->
+            if (completion.success) {
                 installedVersion++
                 Toast.makeText(
                     context,
-                    "Voz ${voiceDownload.label.orEmpty().replaceFirstChar { it.uppercase() }} transferida com sucesso!",
+                    "Voz ${completion.label.replaceFirstChar { it.uppercase() }} transferida com sucesso!",
                     Toast.LENGTH_SHORT,
                 ).show()
-                VoiceDownloadManager.acknowledge(voiceDownload.requestId)
-            }
-            VoiceDownloadStatus.ERROR -> {
+            } else {
                 Toast.makeText(
                     context,
-                    "Erro ao transferir voz: ${voiceDownload.error ?: "Falha na transferência"}",
+                    "Erro ao transferir voz: ${completion.error ?: "Falha na transferência"}",
                     Toast.LENGTH_LONG,
                 ).show()
-                VoiceDownloadManager.acknowledge(voiceDownload.requestId)
             }
-            else -> Unit
+            VoiceDownloadManager.acknowledge(completion.requestId)
         }
     }
 
@@ -508,27 +510,49 @@ fun VoiceDiscoveryScreen(onBack: () -> Unit) {
                             }
                             val isDownloading = voiceDownload.status == VoiceDownloadStatus.DOWNLOADING &&
                                 voiceDownload.key == voice.key
+                            val queueIndex = voiceDownload.queued.indexOfFirst { it.key == voice.key }
+                            val isQueued = queueIndex >= 0
                             val isPlayingThis = playingVoiceKey == voice.key
 
                             VoiceDiscoveryCard(
                                 voice = voice,
                                 isInstalled = isInstalled,
                                 isDownloading = isDownloading,
-                                canDownload = voiceDownload.status != VoiceDownloadStatus.DOWNLOADING,
+                                isQueued = isQueued,
+                                queuePosition = queueIndex + 1,
                                 progress = if (isDownloading) voiceDownload.progress else 0f,
                                 isPlaying = isPlayingThis,
                                 onPlaySample = { playSample(voice) },
                                 onDownload = {
-                                    VoiceDownloadManager.start(
+                                    val result = VoiceDownloadManager.start(
                                         context = context.applicationContext,
                                         key = voice.key,
                                         label = voice.name,
                                         source = VoiceDownloadSource.CATALOG,
                                     )
+                                    if (result == VoiceDownloadStartResult.QUEUED) {
+                                        Toast.makeText(
+                                            context,
+                                            resources.getString(R.string.voice_download_added_to_queue),
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
+                                    }
                                 },
                                 onCancel = {
-                                    VoiceDownloadManager.cancel()
-                                    Toast.makeText(context, "Transferência cancelada", Toast.LENGTH_SHORT).show()
+                                    VoiceDownloadManager.cancelActive()
+                                    Toast.makeText(
+                                        context,
+                                        resources.getString(R.string.voice_download_cancelled),
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
+                                },
+                                onCancelQueued = {
+                                    VoiceDownloadManager.cancelQueued(voice.key)
+                                    Toast.makeText(
+                                        context,
+                                        resources.getString(R.string.voice_download_removed_from_queue),
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
                                 }
                             )
                         }
@@ -592,12 +616,14 @@ private fun VoiceDiscoveryCard(
     voice: CatalogVoice,
     isInstalled: Boolean,
     isDownloading: Boolean,
-    canDownload: Boolean,
+    isQueued: Boolean,
+    queuePosition: Int,
     progress: Float,
     isPlaying: Boolean,
     onPlaySample: () -> Unit,
     onDownload: () -> Unit,
     onCancel: () -> Unit,
+    onCancelQueued: () -> Unit,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -659,6 +685,48 @@ private fun VoiceDiscoveryCard(
                             )
                         }
                     }
+                    isQueued -> {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.secondaryContainer
+                            ) {
+                                Row(
+                                    Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Schedule,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp),
+                                        tint = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
+                                    Text(
+                                        stringResource(
+                                            R.string.voice_download_queued_position,
+                                            queuePosition,
+                                        ),
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
+                                }
+                            }
+                            IconButton(onClick = onCancelQueued, modifier = Modifier.size(36.dp)) {
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = stringResource(
+                                        R.string.voice_download_remove_queued,
+                                    ),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    }
                     isInstalled -> {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -708,7 +776,6 @@ private fun VoiceDiscoveryCard(
                     else -> {
                         FilledTonalButton(
                             onClick = onDownload,
-                            enabled = canDownload,
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                             modifier = Modifier.height(36.dp)
                         ) {

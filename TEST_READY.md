@@ -1,4 +1,4 @@
-# Test Readiness — EchoReading 2.2.0
+# Test Readiness — EchoReading 2.3.0
 
 **Status**: JVM suite passing; four-test Android instrumentation suite passing
 on the Pixel_6 API 37 x86_64 emulator

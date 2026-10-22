@@ -49,6 +49,7 @@ import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.RecordVoiceOver
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Sync
@@ -110,6 +111,7 @@ import com.echoreading.voice.OfflineVoice
 import com.echoreading.voice.ElevenLabsAuth
 import com.echoreading.voice.VoiceDownloadManager
 import com.echoreading.voice.VoiceDownloadSource
+import com.echoreading.voice.VoiceDownloadStartResult
 import com.echoreading.voice.VoiceDownloadStatus
 import com.echoreading.voice.VoiceOption
 import com.echoreading.speech.OfflineSpeech
@@ -239,7 +241,7 @@ private fun SettingsMainMenu(onNavigate: (String) -> Unit) {
                 )
                 Column {
                     Text(
-                        "Eco Leitura Motor v2.2.0 (Material 3)",
+                        "Eco Leitura Motor v2.3.0 (Material 3)",
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Medium),
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -598,30 +600,26 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
         }
     }
 
-    LaunchedEffect(voiceDownload.requestId, voiceDownload.status) {
-        when (voiceDownload.status) {
-            VoiceDownloadStatus.SUCCESS -> {
-                val voiceId = voiceDownload.key
-                if (!voiceId.isNullOrBlank()) {
+    LaunchedEffect(voiceDownload.completions) {
+        voiceDownload.completions.forEach { completion ->
+            if (completion.success) {
+                if (completion.key.isNotBlank()) {
                     ElevenLabsAuth.setUseForReading(context, false)
-                    ReaderState.setVoice(context, voiceId)
+                    ReaderState.setVoice(context, completion.key)
                 }
                 Toast.makeText(
                     context,
-                    "${voiceDownload.label.orEmpty()} pronta a usar!",
+                    "${completion.label} pronta a usar!",
                     Toast.LENGTH_SHORT,
                 ).show()
-                VoiceDownloadManager.acknowledge(voiceDownload.requestId)
-            }
-            VoiceDownloadStatus.ERROR -> {
+            } else {
                 Toast.makeText(
                     context,
                     resources.getString(R.string.download_failed),
                     Toast.LENGTH_SHORT,
                 ).show()
-                VoiceDownloadManager.acknowledge(voiceDownload.requestId)
             }
-            else -> Unit
+            VoiceDownloadManager.acknowledge(completion.requestId)
         }
     }
 
@@ -1101,6 +1099,8 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
                 downloadableVoices.forEach { voice ->
                     val isDownloading = voiceDownload.status == VoiceDownloadStatus.DOWNLOADING &&
                         voiceDownload.key == voice.id
+                    val queueIndex = voiceDownload.queued.indexOfFirst { it.key == voice.id }
+                    val isQueued = queueIndex >= 0
                     val sizeMb = voice.fileSize / (1024f * 1024f)
 
                     Card(
@@ -1111,7 +1111,7 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
                         ),
                         border = CardDefaults.outlinedCardBorder().copy(
                             brush = androidx.compose.ui.graphics.SolidColor(
-                                if (isDownloading) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                                if (isDownloading || isQueued) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
                                 else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
                             )
                         )
@@ -1124,7 +1124,7 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
                             ) {
                                 Surface(
                                     shape = CircleShape,
-                                    color = if (isDownloading) MaterialTheme.colorScheme.secondaryContainer
+                                    color = if (isDownloading || isQueued) MaterialTheme.colorScheme.secondaryContainer
                                     else MaterialTheme.colorScheme.surfaceContainerHigh,
                                     modifier = Modifier.size(40.dp)
                                 ) {
@@ -1148,6 +1148,13 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
                                                     .size(20.dp)
                                                     .rotate(rotation)
                                             )
+                                        } else if (isQueued) {
+                                            Icon(
+                                                Icons.Default.Schedule,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                                modifier = Modifier.size(20.dp)
+                                            )
                                         } else {
                                             Icon(
                                                 Icons.Default.RecordVoiceOver,
@@ -1169,7 +1176,14 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
                                     )
                                     Spacer(Modifier.height(3.dp))
                                     Text(
-                                        "Neutral · ${String.format(Locale.US, "%.1f", sizeMb)} MB",
+                                        if (isQueued) {
+                                            resources.getString(
+                                                R.string.voice_download_queued_position,
+                                                queueIndex + 1,
+                                            )
+                                        } else {
+                                            "Neutral · ${String.format(Locale.US, "%.1f", sizeMb)} MB"
+                                        },
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         maxLines = 1,
@@ -1177,58 +1191,95 @@ private fun SettingsVoice(onBack: () -> Unit, onDiscoverVoices: () -> Unit) {
                                     )
                                 }
 
-                                if (!isDownloading) {
-                                    Button(
-                                        enabled = voiceDownload.status != VoiceDownloadStatus.DOWNLOADING,
-                                        onClick = {
-                                            VoiceDownloadManager.start(
-                                                context = context.applicationContext,
-                                                key = voice.id,
-                                                label = voice.label,
-                                                source = VoiceDownloadSource.LOCAL,
+                                when {
+                                    isDownloading -> {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(
+                                                "${(voiceDownload.progress * 100).toInt()}%",
+                                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                                color = MaterialTheme.colorScheme.primary
                                             )
-                                        },
-                                        shape = CircleShape,
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                            contentColor = MaterialTheme.colorScheme.onPrimary
-                                        ),
-                                        contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                                            horizontal = 12.dp,
-                                            vertical = 8.dp
-                                        )
-                                    ) {
-                                        Icon(Icons.Default.Download, contentDescription = null, Modifier.size(16.dp))
-                                        Spacer(Modifier.width(4.dp))
-                                        Text(
-                                            "${String.format(Locale.US, "%.0f", sizeMb)} MB",
-                                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
-                                        )
+                                            Spacer(Modifier.width(4.dp))
+                                            IconButton(
+                                                onClick = {
+                                                    VoiceDownloadManager.cancelActive()
+                                                    Toast.makeText(
+                                                        context,
+                                                        resources.getString(R.string.voice_download_cancelled),
+                                                        Toast.LENGTH_SHORT,
+                                                    ).show()
+                                                },
+                                                modifier = Modifier.size(32.dp)
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.Close,
+                                                    contentDescription = resources.getString(R.string.voice_download_cancel_active),
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
+                                        }
                                     }
-                                } else {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(
-                                            "${(voiceDownload.progress * 100).toInt()}%",
-                                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                        Spacer(Modifier.width(4.dp))
-                                        IconButton(
+                                    isQueued -> {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(
+                                                resources.getString(R.string.voice_download_queued),
+                                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                            Spacer(Modifier.width(4.dp))
+                                            IconButton(
+                                                onClick = {
+                                                    VoiceDownloadManager.cancelQueued(voice.id)
+                                                    Toast.makeText(
+                                                        context,
+                                                        resources.getString(R.string.voice_download_removed_from_queue),
+                                                        Toast.LENGTH_SHORT,
+                                                    ).show()
+                                                },
+                                                modifier = Modifier.size(32.dp)
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.Close,
+                                                    contentDescription = resources.getString(R.string.voice_download_remove_queued),
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                    else -> {
+                                        Button(
                                             onClick = {
-                                                VoiceDownloadManager.cancel()
-                                                Toast.makeText(
-                                                    context,
-                                                    "Transferência cancelada",
-                                                    Toast.LENGTH_SHORT,
-                                                ).show()
+                                                val result = VoiceDownloadManager.start(
+                                                    context = context.applicationContext,
+                                                    key = voice.id,
+                                                    label = voice.label,
+                                                    source = VoiceDownloadSource.LOCAL,
+                                                )
+                                                if (result == VoiceDownloadStartResult.QUEUED) {
+                                                    Toast.makeText(
+                                                        context,
+                                                        resources.getString(R.string.voice_download_added_to_queue),
+                                                        Toast.LENGTH_SHORT,
+                                                    ).show()
+                                                }
                                             },
-                                            modifier = Modifier.size(32.dp)
+                                            shape = CircleShape,
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                                contentColor = MaterialTheme.colorScheme.onPrimary
+                                            ),
+                                            contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                                                horizontal = 12.dp,
+                                                vertical = 8.dp
+                                            )
                                         ) {
-                                            Icon(
-                                                Icons.Default.Close,
-                                                contentDescription = "Cancelar",
-                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                modifier = Modifier.size(18.dp)
+                                            Icon(Icons.Default.Download, contentDescription = null, Modifier.size(16.dp))
+                                            Spacer(Modifier.width(4.dp))
+                                            Text(
+                                                "${String.format(Locale.US, "%.0f", sizeMb)} MB",
+                                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
                                             )
                                         }
                                     }

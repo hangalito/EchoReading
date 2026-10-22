@@ -8,6 +8,23 @@
     <string name="choose_voice">Voz</string>
     <string name="download_voice">Transferir</string>
     <string name="download_failed">Falha ao transferir a voz. Verifica a ligação e tente novamente.</string>
+    <string name="voice_download_queued">Na fila</string>
+    <string name="voice_download_queued_position">Na fila · %1$d.º</string>
+    <string name="voice_download_added_to_queue">Voz adicionada à fila de transferência</string>
+    <string name="voice_download_cancelled">Transferência cancelada</string>
+    <string name="voice_download_removed_from_queue">Voz removida da fila</string>
+    <string name="voice_download_cancel_active">Cancelar transferência</string>
+    <string name="voice_download_remove_queued">Remover da fila</string>
+    <string name="voice_transfers_title">Transferências de voz</string>
+    <string name="voice_transfer_active_unknown">Voz</string>
+    <string name="voice_transfer_progress">%1$d%% concluído</string>
+    <string name="voice_transfer_summary_active">1 transferência ativa</string>
+    <string name="voice_transfer_summary_queued">%1$d em espera</string>
+    <string name="voice_transfer_summary_both">1 ativa · %1$d em espera</string>
+    <string name="voice_transfer_queue_title">Em espera (%1$d)</string>
+    <string name="voice_transfer_queue_position">%1$d.º na fila</string>
+    <string name="voice_transfer_queue_hint">A transferência seguinte começa automaticamente.</string>
+    <string name="voice_transfer_none">Sem transferências em curso.</string>
     <string name="speech_speed">Velocidade</string>
     <string name="start_reading">Começar a ler</string>
     <string name="pause_reading">Pausar</string>
@@ -97,7 +114,7 @@
     <string name="privacy_title">Privacidade Local e Sem Rastreio</string>
     <string name="privacy_body">Por predefinição, textos, histórico e preferências ficam no armazenamento local do dispositivo e não são enviados para servidores externos. As cópias de segurança do Android estão desativadas. Se ativar as vozes ElevenLabs opcionais, o texto a sintetizar é enviado para a ElevenLabs através da Internet.</string>
     <string name="cancel">Cancelar</string>
-    <string name="engine_version_info">Eco Leitura Motor v2.2.0 — Sintetizador neural ativo offline com privacidade protegida</string>
+    <string name="engine_version_info">Eco Leitura Motor v2.3.0 — Sintetizador neural ativo offline com privacidade protegida</string>
     <!-- Notification controls -->
     <string name="reading_status_channel">Estado da Leitura</string>
     <string name="reading_complete_title">Leitura Concluída</string>
@@ -133,7 +150,12 @@
     <string name="transcribe_stop_recording">Transcrever</string>
     <string name="transcribe_listening">A ouvir… Fale agora para transcrever</string>
     <string name="transcribe_model_label">Modelo de transcrição</string>
+    <string name="transcribe_model_sheet_hint">Escolhe o modelo a usar. Podes transferir outro modelo sem sair deste ecrã.</string>
     <string name="transcribe_model_selected">Modelo selecionado: %1$s</string>
+    <string name="transcribe_audio_playback_title">Áudio da transcrição</string>
+    <string name="transcribe_audio_default_name">Áudio</string>
+    <string name="transcribe_audio_play">Reproduzir</string>
+    <string name="transcribe_audio_pause">Pausar</string>
     <string name="transcribe_model_used">Transcrito com: %1$s</string>
     <string name="transcribe_change_model">Alterar</string>
     <string name="transcribe_open_actions">Abrir ações de transcrição</string>

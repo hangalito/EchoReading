@@ -167,6 +167,9 @@ class SpeechProcessingService : Service() {
         releaseRecorder()
         require(sampleCount > 0) { "transcribe_error_silent" }
         val duration = sampleCount * 1000L / AudioDecoder.SAMPLE_RATE
+        val playbackPath = runCatching {
+            retainRecordedPlayback(pcm, jobId)
+        }.getOrNull()?.absolutePath.orEmpty()
         saveCheckpoint(
             kind = KIND_TRANSCRIPTION,
             jobId = jobId,
@@ -174,9 +177,19 @@ class SpeechProcessingService : Service() {
             pcmPath = pcm.absolutePath,
             fileName = "Gravação de voz",
             durationMs = duration,
+            audioPath = playbackPath,
         )
         startWorkForeground("A transcrever", "A verificar a gravação", processingType())
-        processPcm(jobId, modelId, pcm, "Gravação de voz", duration, 0, "")
+        processPcm(
+            jobId,
+            modelId,
+            pcm,
+            "Gravação de voz",
+            duration,
+            0,
+            "",
+            audioPath = playbackPath,
+        )
     }
 
     private fun startUriTranscription(uri: Uri, modelId: String) {
@@ -193,7 +206,18 @@ class SpeechProcessingService : Service() {
                 contentResolver.openInputStream(uri)?.use { input ->
                     FileOutputStream(source).buffered().use { output -> input.copyTo(output, 64 * 1024) }
                 } ?: error("Não foi possível abrir o ficheiro de áudio")
-                saveCheckpoint(KIND_DECODING, id, modelId, source.absolutePath, pcm.absolutePath, fileName)
+                val playbackPath = runCatching {
+                    retainPlaybackCopy(source, id, fileName)
+                }.getOrNull()?.absolutePath.orEmpty()
+                saveCheckpoint(
+                    KIND_DECODING,
+                    id,
+                    modelId,
+                    source.absolutePath,
+                    pcm.absolutePath,
+                    fileName,
+                    audioPath = playbackPath,
+                )
                 SpeechToTextState.publish(
                     this@SpeechProcessingService,
                     TranscriptionSnapshot(
@@ -201,6 +225,7 @@ class SpeechProcessingService : Service() {
                         jobId = id,
                         modelId = modelId,
                         audioFileName = fileName,
+                        audioPath = playbackPath,
                     ),
                 )
                 val decoded = AudioDecoder.decodeToPcm(
@@ -222,8 +247,18 @@ class SpeechProcessingService : Service() {
                     pcmPath = pcm.absolutePath,
                     fileName = fileName,
                     durationMs = decoded.durationMs,
+                    audioPath = playbackPath,
                 )
-                processPcm(id, modelId, pcm, fileName, decoded.durationMs, 0, "")
+                processPcm(
+                    id,
+                    modelId,
+                    pcm,
+                    fileName,
+                    decoded.durationMs,
+                    0,
+                    "",
+                    audioPath = playbackPath,
+                )
             } catch (_: CancellationException) {
             } catch (error: LinkageError) {
                 fail(id, modelId, fileName, "Motor de transcrição indisponível: ${error.message.orEmpty()}")
@@ -241,6 +276,7 @@ class SpeechProcessingService : Service() {
         durationMs: Long,
         startChunk: Int,
         savedText: String,
+        audioPath: String = "",
     ) {
         require(OfflineSpeech.isModelInstalled(this, modelId)) { "Modelo de transcrição não instalado" }
         val totalSamples = pcm.length() / 2L
@@ -264,6 +300,7 @@ class SpeechProcessingService : Service() {
                     processedDurationMs = chunkIndex * 30_000L,
                     transcribedText = transcript.toString(),
                     progress = chunkIndex.toFloat() / totalChunks,
+                    audioPath = audioPath,
                 ),
             )
             val quality = AudioQualityChecker.analyze(samples, AudioDecoder.SAMPLE_RATE)
@@ -277,6 +314,7 @@ class SpeechProcessingService : Service() {
                         status = TranscriptionStatus.TRANSCRIBING,
                         qualityReport = quality,
                         progress = progress,
+                        audioPath = audioPath,
                     ),
                 )
                 updateNotification("A transcrever", "Bloco ${chunkIndex + 1} de $totalChunks")
@@ -298,6 +336,7 @@ class SpeechProcessingService : Service() {
                 durationMs = durationMs,
                 nextChunk = nextChunk,
                 text = transcript.toString(),
+                audioPath = audioPath,
             )
             SpeechToTextState.publish(
                 this,
@@ -306,6 +345,7 @@ class SpeechProcessingService : Service() {
                     processedDurationMs = processedMs,
                     transcribedText = transcript.toString(),
                     progress = nextChunk.toFloat() / totalChunks,
+                    audioPath = audioPath,
                 ),
             )
         }
@@ -323,6 +363,7 @@ class SpeechProcessingService : Service() {
                 processedDurationMs = durationMs,
                 transcribedText = result,
                 progress = 1f,
+                audioPath = audioPath,
             ),
         )
         clearCheckpoint()
@@ -434,6 +475,7 @@ class SpeechProcessingService : Service() {
                             saved.durationMs,
                             saved.nextChunk,
                             saved.text,
+                            audioPath = saved.audioPath,
                         )
                     } catch (_: CancellationException) {
                     } catch (error: LinkageError) {
@@ -454,6 +496,21 @@ class SpeechProcessingService : Service() {
                 acquireWakeLock()
                 activeJob = scope.launch {
                     try {
+                        val playbackPath = saved.audioPath
+                            .takeIf { it.isNotBlank() && File(it).isFile }
+                            ?: runCatching {
+                                retainPlaybackCopy(source, saved.jobId, saved.fileName)
+                            }.getOrNull()?.absolutePath.orEmpty()
+                        SpeechToTextState.publish(
+                            this@SpeechProcessingService,
+                            TranscriptionSnapshot(
+                                status = TranscriptionStatus.DECODING,
+                                jobId = saved.jobId,
+                                modelId = saved.modelId,
+                                audioFileName = saved.fileName,
+                                audioPath = playbackPath,
+                            ),
+                        )
                         val decoded = AudioDecoder.decodeToPcm(
                             this@SpeechProcessingService,
                             Uri.fromFile(source),
@@ -467,6 +524,7 @@ class SpeechProcessingService : Service() {
                             pcmPath = pcm.absolutePath,
                             fileName = saved.fileName,
                             durationMs = decoded.durationMs,
+                            audioPath = playbackPath,
                         )
                         processPcm(
                             saved.jobId,
@@ -476,6 +534,7 @@ class SpeechProcessingService : Service() {
                             decoded.durationMs,
                             0,
                             "",
+                            audioPath = playbackPath,
                         )
                     } catch (_: CancellationException) {
                     } catch (error: LinkageError) {
@@ -489,6 +548,9 @@ class SpeechProcessingService : Service() {
                 val pcm = File(saved.pcmPath)
                 if (pcm.isFile && pcm.length() > 0) {
                     val duration = pcm.length() / 2L * 1000L / AudioDecoder.SAMPLE_RATE
+                    val playbackPath = runCatching {
+                        retainRecordedPlayback(pcm, saved.jobId)
+                    }.getOrNull()?.absolutePath.orEmpty()
                     saveCheckpoint(
                         KIND_TRANSCRIPTION,
                         saved.jobId,
@@ -496,6 +558,7 @@ class SpeechProcessingService : Service() {
                         pcmPath = pcm.absolutePath,
                         fileName = saved.fileName,
                         durationMs = duration,
+                        audioPath = playbackPath,
                     )
                     resumeCheckpoint()
                 } else stopSelf()
@@ -518,6 +581,7 @@ class SpeechProcessingService : Service() {
                 modelId = modelId,
                 audioFileName = fileName,
                 error = message,
+                audioPath = SpeechToTextState.snapshot.value.audioPath,
             ),
         )
         showFinishedNotification("Erro na transcrição", readableError(message))
@@ -671,6 +735,66 @@ class SpeechProcessingService : Service() {
 
     private fun jobDirectory(id: String) = File(noBackupFilesDir, "stt-jobs/$id")
 
+    private fun playbackDirectory() = File(noBackupFilesDir, "stt-playback")
+
+    /**
+     * Keeps one playable copy of the current audio. The decoding source lives
+     * inside a job directory that is removed when transcription finishes, so a
+     * copy outside it is required for playback from the STT screen.
+     */
+    private fun retainPlaybackCopy(source: File, jobId: String, fileName: String): File {
+        val dir = playbackDirectory().apply { mkdirs() }
+        dir.listFiles()?.forEach { it.delete() }
+        val extension = fileName.substringAfterLast('.', "")
+            .filter { it.isLetterOrDigit() }
+            .take(8)
+            .ifBlank { "audio" }
+        val target = File(dir, "$jobId.$extension")
+        source.copyTo(target, overwrite = true)
+        return target
+    }
+
+    /** Wraps the raw 16 kHz mono PCM recording in a WAV container for playback. */
+    private fun retainRecordedPlayback(pcm: File, jobId: String): File {
+        val dir = playbackDirectory().apply { mkdirs() }
+        dir.listFiles()?.forEach { it.delete() }
+        val target = File(dir, "$jobId.wav")
+        val dataBytes = pcm.length()
+        require(dataBytes in 1..(Int.MAX_VALUE - 36).toLong()) { "Gravação inválida" }
+        BufferedOutputStream(FileOutputStream(target)).use { output ->
+            fun ascii(value: String) = output.write(value.toByteArray(Charsets.US_ASCII))
+            fun le16(value: Int) {
+                output.write(value and 0xff)
+                output.write((value ushr 8) and 0xff)
+            }
+            fun le32(value: Int) {
+                output.write(value and 0xff)
+                output.write((value ushr 8) and 0xff)
+                output.write((value ushr 16) and 0xff)
+                output.write((value ushr 24) and 0xff)
+            }
+            val channels = 1
+            val bitsPerSample = 16
+            val byteRate = AudioDecoder.SAMPLE_RATE * channels * bitsPerSample / 8
+            val blockAlign = channels * bitsPerSample / 8
+            ascii("RIFF")
+            le32((36 + dataBytes).toInt())
+            ascii("WAVE")
+            ascii("fmt ")
+            le32(16)
+            le16(1)
+            le16(channels)
+            le32(AudioDecoder.SAMPLE_RATE)
+            le32(byteRate)
+            le16(blockAlign)
+            le16(bitsPerSample)
+            ascii("data")
+            le32(dataBytes.toInt())
+            pcm.inputStream().buffered().use { it.copyTo(output, 64 * 1024) }
+        }
+        return target
+    }
+
     private fun saveCheckpoint(
         kind: String,
         jobId: String = "",
@@ -681,6 +805,7 @@ class SpeechProcessingService : Service() {
         durationMs: Long = 0,
         nextChunk: Int = 0,
         text: String = "",
+        audioPath: String = "",
     ) {
         getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putString("kind", kind)
@@ -692,6 +817,7 @@ class SpeechProcessingService : Service() {
             .putLong("duration_ms", durationMs)
             .putInt("next_chunk", nextChunk)
             .putString("text", text)
+            .putString("audio_path", audioPath)
             .commit()
     }
 
@@ -705,6 +831,7 @@ class SpeechProcessingService : Service() {
         val durationMs: Long,
         val nextChunk: Int,
         val text: String,
+        val audioPath: String,
     )
 
     private fun checkpoint(): Checkpoint {
@@ -719,6 +846,7 @@ class SpeechProcessingService : Service() {
             durationMs = prefs.getLong("duration_ms", 0),
             nextChunk = prefs.getInt("next_chunk", 0),
             text = prefs.getString("text", "").orEmpty(),
+            audioPath = prefs.getString("audio_path", "").orEmpty(),
         )
     }
 

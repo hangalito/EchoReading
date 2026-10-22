@@ -233,7 +233,7 @@ object ElevenLabsMcp {
             val params = JSONObject()
                 .put("protocolVersion", "2025-06-18")
                 .put("capabilities", JSONObject())
-                .put("clientInfo", JSONObject().put("name", "Eco Leitura").put("version", "2.2.0"))
+                .put("clientInfo", JSONObject().put("name", "Eco Leitura").put("version", "2.3.0"))
             request("initialize", params)
             request("notifications/initialized", JSONObject(), notification = true)
             val discovered = linkedMapOf<String, JSONObject>()
